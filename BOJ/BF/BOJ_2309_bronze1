@@ -18,6 +18,7 @@ for i in range(len(ar)):
                 if k == i or k == j:
                     continue
                 print(ar[k])
+            exit()
 
 ###############################################################
 # 방법2: itertools에서 combinations를 사용
