@@ -1,0 +1,13 @@
+# BOJ_1912_silver2
+
+# 1. 문제 조건 입력
+n = int(input())
+ar = list(map(int, input().split()))
+dp = [0] * n
+dp[0] = ar[0]
+
+# 2. 반복문으로 최대값을 가지는 수열 탐색
+for i in range(1, len(ar)):
+    dp[i] = max(dp[i - 1] + ar[i], ar[i])
+
+print(max(dp))
