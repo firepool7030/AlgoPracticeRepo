@@ -1,0 +1,11 @@
+# BOJ_24262_bronze5
+def men_of_passion(arr, n):
+    i = n // 2
+    if 0 <= i <= len(arr):
+        return arr[i]
+    else:
+        print("error")
+        return None
+
+print(1)
+print(0)
