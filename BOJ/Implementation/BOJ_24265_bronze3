@@ -1,0 +1,6 @@
+# BOJ_24265_bronze3
+import sys
+inp = sys.stdin.readline
+n = int(inp())
+
+print(f"{n*(n-1)//2}\n{2}")
