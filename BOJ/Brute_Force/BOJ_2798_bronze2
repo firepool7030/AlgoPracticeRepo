@@ -1,0 +1,15 @@
+# BOJ_2798_bronze2
+import sys
+inp = sys.stdin.readline
+n, m = map(int,inp().split())
+arr = list(map(int, inp().split()))
+max_ = 0
+
+for i in range(n):
+    for j in range(i + 1, n):
+        for k in range(j + 1, n):
+            tmp = arr[i] + arr[j] + arr[k]
+            if m >= tmp > max_:
+                max_ = tmp
+
+print(max_)
