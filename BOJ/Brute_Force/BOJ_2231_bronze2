@@ -1,0 +1,26 @@
+# BOJ_2231_bronze2
+import sys
+inp = sys.stdin.readline
+
+# 자연수 n 입력
+n = int(inp())
+# 반복문 시작 지점 연산
+start = n - 9 * len(str(n))
+if start < 0:
+    start = n // 2
+# 자연수 n의 생성자 여부를 저장하는 flag 저장
+flag = 0
+
+# start 부터 n까지 반복문을 순회하면서 생성자가 존재하는지 탐색
+for i in range(start, n):
+    # map 함수를 이용해서 각 자리수 합을 덧셈
+    sum_of_digit = sum(map(int, str(i)))
+    # 생성자 여부 확인
+    if sum_of_digit + i == n:
+        print(i)
+        flag = 1
+        break
+
+# 생성자가 없으면 0 출력
+if flag == 0:
+    print(0)
