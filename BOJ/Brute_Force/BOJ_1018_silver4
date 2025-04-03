@@ -1,0 +1,32 @@
+#BOJ_1018_silver4
+
+import sys
+inp = sys.stdin.readline
+
+# 열과 행 입력
+n, m = map(int, inp().split())
+
+# 체스보드의 색 입력
+chessboard = [list(inp().strip()) for _ in range(n)]
+
+# 최솟값으로 색을 칠하는 횟수 저장 변수
+total_min = 32
+
+# 전체 직사각형에서 8 * 8 범위만 왼쪽 모서리부터 오른쪽 모서리까지 순회하면서 경우의 수 탐색
+for i in range(n - 7):
+    for j in range(m - 7):
+        change_count = 0
+        # 체스판의 시작점 색 저장
+        color = chessboard[i][j]
+        # 체스판 순회 시작
+        for height in range(i, i + 8):
+            for width in range(j, j + 8):
+                if (height + width) % 2 == 0 and color != chessboard[height][width]:
+                    change_count += 1
+                elif (height + width) % 2 != 0 and color == chessboard[height][width]:
+                    change_count += 1
+        # 이전 체스판들의 색 변경 최소값과 현재 체스판 색 변경 횟수 비교
+        tmp_min = min(change_count, 64 - change_count)
+        total_min = min(tmp_min, total_min)
+
+print(total_min)
