@@ -1,0 +1,50 @@
+# BOJ_2839_silver4
+
+import sys
+inp = sys.stdin.readline
+
+n = int(inp())
+cnt = 0
+
+while n > 0:
+    if n % 5 == 0:
+        cnt += n // 5
+        break
+    n -= 3
+    cnt += 1
+
+if n < 0:
+    print(-1)
+else:
+    print(cnt)
+
+========================================================
+# DP version -> very slooooowww
+
+import sys
+inp = sys.stdin.readline
+
+n = int(inp())
+inf = float('inf')
+arr = [inf] * (n + 1)
+flag = 0
+
+if n in [3, 5]:
+    print(1)
+elif n == 4:
+    print(-1)
+elif n % 5 == 0:
+    print(n // 5)
+else:
+    arr[3] = 1
+    arr[5] = 1
+
+    for i in range(3, n):
+        for j in range(i, n):
+            if arr[i] != -1 and arr[j] != -1 and i + j <= n:
+                arr[i + j] = min(arr[i] + arr[j], arr[i + j])
+
+    if arr[n] != inf:
+        print(arr[n])
+    else:
+        print(-1)
