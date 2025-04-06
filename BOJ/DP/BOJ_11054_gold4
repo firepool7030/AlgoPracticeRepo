@@ -2,28 +2,21 @@
 import sys
 input = sys.stdin.readline
 
-# 리스트 길이와 리스트 입력
+# 리스트 입력
 n = int(input())
 arr = list(map(int, input().split()))
-rev_arr = arr[::-1]
 
-# 오름차순 순서와 내림차순 순서를 저장하는 리스트 저장
-ascending_count = [1] * n
-descending_count = [1] * n
-max_count = 0
+# 리스트의 오름차순을 계산하는 함수 정의
+def count_asc(lst: list):
+    count = [1] * n # 오름차순 개수 저장하는 리스트 정의
+    for i, x in enumerate(lst):
+        for j in range(i):
+            if lst[j] < x: # DP 방식을 이용해서 현재 원소의 가장 큰 오름차수 값 저장
+                count[i] = max(count[i], count[j] + 1)
+    return count
 
-# DP 이중반복문
-for i in range(n): # 전체 리스트를 순회하면서
-    x1 = arr[i]
-    x2 = rev_arr[i]
-    for j in range(i): # 최대 오름차순 저장
-        if arr[j] < x1:
-            ascending_count[i] = max(ascending_count[i], ascending_count[j]+1)
-        if rev_arr[j] < x2: # 리스트를 역으로 순회하면서 최대 내림차순 저장
-            descending_count[i] = max(descending_count[i], descending_count[j]+1)
+asc_count = count_asc(arr) # 오름차순 저장
+desc_count = count_asc(arr[::-1])[::-1] # 내림차순 저장
 
-descending_count = descending_count[::-1] # 최대 내림차순을 역순에서 순행으로 재정렬
-
-for i in range(n):
-    max_count = max(max_count, ascending_count[i] + descending_count[i])
-print(max_count - 1) # 최대 바이토닉 수열 길이 출력
+max_count = max(sum(x) for x in zip(asc_count, desc_count)) # zip 함수를 사용해서 peak 지점 탐색 후 최대 바이토닉 수열 지점 저장
+print(max_count - 1) # 최대 바이토닉 수열 출력
