@@ -1,0 +1,9 @@
+# BOJ_2751_silver5
+import sys
+input = sys.stdin.readline
+
+n = int(input())
+arr = [int(input()) for _ in range(n)]
+arr = sorted(arr)
+
+print(*arr, sep='\n') # 배열을 출력할때는 이런식으로 출력하자!
