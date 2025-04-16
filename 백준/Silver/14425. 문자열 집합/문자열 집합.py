@@ -4,7 +4,7 @@ input = sys.stdin.readline
 
 n, m = map(int, input().split())
 
-arr1 = set([input().strip() for _ in range(n)])
+arr1 = set(input().strip() for _ in range(n))
 cnt = 0
 
 for _ in range(m):
