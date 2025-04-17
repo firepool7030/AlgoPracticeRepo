@@ -12,5 +12,5 @@ for _ in range(n):
     elif status == 'leave':
         arr.discard(name)
 
-result = '\n'.join(f'{name}' for name in sorted(arr, reverse=True))
+result = '\n'.join(sorted(arr, reverse=True))
 print(result)
