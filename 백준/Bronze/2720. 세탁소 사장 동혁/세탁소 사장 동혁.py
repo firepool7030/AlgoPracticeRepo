@@ -1,0 +1,26 @@
+# BOJ 2720
+"""
+쿼터(Quarter, $0.25)의 개수,
+다임(Dime, $0.10)의 개수,
+니켈(Nickel, $0.05)의 개수,
+페니(Penny, $0.01)의 개수를 최소로 하는게 목적
+"""
+
+n = int(input())
+
+for i in range(n):
+    c = int(input())
+
+    q = c // 25
+    c = c - q * 25
+    #print(q, c)
+
+    d = c // 10
+    c = c - d * 10
+    #print(d, c)
+
+    n = c // 5
+    c = c - n * 5
+    #print(n, c)
+
+    print(q, d, n, c)
