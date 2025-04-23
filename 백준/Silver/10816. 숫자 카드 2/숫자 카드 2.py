@@ -10,7 +10,7 @@ for tmp in lst:
     if tmp in arr:
         arr[tmp] += 1
     else:
-        arr.update({tmp: 1})
+        arr[tmp] = 1
 
 m = int(input())
 lst = list(map(int, input().strip().split()))
