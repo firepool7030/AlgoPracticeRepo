@@ -13,6 +13,6 @@ for _ in range(m):
     if tmp in arr1:
         arr2.add(tmp)
 
-result = '\n'.join(sorted(arr2))
 print(len(arr2))
-print(result)
+for name in sorted(arr2):
+    print(name)
