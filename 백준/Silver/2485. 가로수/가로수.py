@@ -1,4 +1,5 @@
 #BOJ_2485_silver4
+#가독성 향상 version
 import sys
 input = sys.stdin.readline
 
@@ -8,22 +9,16 @@ def gcd (x:int, y:int):
     return x
 
 n = int(input())
-prev = int(input())
-result = 0
-arr = []
+arr1 = [int(input()) for _ in range(n)]
+arr2 = [arr1[i] - arr1[i - 1] for i in range(1, n)]
 
-for _ in range(n-1):
-    tmp = int(input())
-    arr.append(tmp - prev)
-    if result == 0:
-        result = tmp - prev
-    else:
-        result = gcd(result, tmp - prev)
-    prev = tmp
+total_gcd = arr2[0]
+total_cnt = 0
 
-cnt = 0
+for i in arr2:
+    total_gcd = gcd(total_gcd, i)
 
-for i in arr:
-    cnt += i // result - 1
+for i in arr2:
+    total_cnt += i // total_gcd - 1
 
-print(cnt)
+print(total_cnt)
