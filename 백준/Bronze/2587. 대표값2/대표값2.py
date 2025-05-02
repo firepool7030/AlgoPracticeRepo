@@ -1,0 +1,9 @@
+# BOJ_2598_bronze2
+import sys
+input = sys.stdin.readline
+
+arr = [int(input()) for _ in range(5)]
+arr = sorted(arr)
+
+print(sum(arr) // 5)
+print(arr[2])
