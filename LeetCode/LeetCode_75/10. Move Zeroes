@@ -1,0 +1,11 @@
+class Solution(object):
+    def moveZeroes(self, nums):
+        num_pointer = 0
+        for i in range(len(nums)):
+            if nums[i] != 0:
+                nums[num_pointer] = nums[i]
+                num_pointer += 1
+
+        for i in range(num_pointer, len(nums)):
+            nums[i] = 0
+        
