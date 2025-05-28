@@ -16,7 +16,7 @@ for _ in range(m):
     graph[end].append(start)
 
 # bfs로 최단 촌수 거리 탐색
-def bfs(vertex: int, level: int, end: int) -> int:
+def bfs(vertex: int, end: int, level: int) -> int:
     visited = [False] * (n + 1)
     queue = deque()
     queue.appendleft((vertex, level))
@@ -30,4 +30,4 @@ def bfs(vertex: int, level: int, end: int) -> int:
                 queue.appendleft((node, level + 1))
     return -1
 
-print(bfs(p_start, 0, p_end))
+print(bfs(p_start, p_end,0))
