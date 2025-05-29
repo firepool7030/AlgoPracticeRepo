@@ -1,29 +1,28 @@
-#BOJ_2178_silver2
+#BOJ_2178_silver1
 import sys
 from collections import deque
-
-# 미로 정보 입력
 input = sys.stdin.readline
+
+# 미로 입력
 n, m = map(int, input().split())
 maze = [list(map(int, input().strip())) for _ in range(n)]
 
-# 미로 탐색을 위한 bfs 구현
-def bfs(a:int, b:int) -> None:
+def bfs() -> None:
     queue = deque()
-    queue.appendleft((a, b))
-    # x, y좌표 변환 리스트
+    queue.appendleft((0, 0, 1)) # x좌표, y좌표, 미로 탐색 횟수 입력
     dx = [-1, 1, 0, 0]
     dy = [0, 0, -1, 1]
     while queue:
-        x, y = queue.pop()
+        x, y, movements = queue.pop()
         if x == n - 1 and y == m - 1:
-            break
-        for i in range(4):
+            print(movements)
+            return
+        maze[x][y] = 0
+        for i in range(4): # 사방을 확인후 DFS 큐에 삽입
             nx = x + dx[i]
             my = y + dy[i]
             if 0 <= nx < n and 0 <= my < m and maze[nx][my] == 1:
-                maze[nx][my] = maze[x][y] + 1
-                queue.appendleft((nx, my))
-    print(maze[n - 1][m - 1])
+                queue.appendleft((nx, my, movements + 1))
+                maze[nx][my] = 0
 
-bfs(0, 0)
+bfs()
