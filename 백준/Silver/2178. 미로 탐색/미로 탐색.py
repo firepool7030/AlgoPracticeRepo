@@ -17,7 +17,6 @@ def bfs() -> None:
         if x == n - 1 and y == m - 1:
             print(movements)
             return
-        maze[x][y] = 0
         for i in range(4): # 사방을 확인후 DFS 큐에 삽입
             nx = x + dx[i]
             my = y + dy[i]
