@@ -1,0 +1,37 @@
+*&---------------------------------------------------------------------*
+*& Report ZQUIZ_05_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQUIZ_05_A02.
+
+* 화면에서 고객 id를 입력받아서, 해당 고객의
+* 아이디, 이름, 국가, 주소, 할인유릉 ㄹ출력하는 프로그램
+* 1) 233,Smith, SE, Frankfrut ..., 20%
+
+* 입력변수와 출력변수 정의
+PARAMETERS: pa_id       TYPE    S_CUSTOMER.
+DATA:       gv_id       TYPE    S_CUSTOMER,
+            gv_name     TYPE    S_CUSTNAME,
+            gv_count    TYPE    S_COUNTRY,
+            gv_addr     TYPE    S_STREET,
+            gv_disc     TYPE    S_DISCOUNT,
+            gv_tmp      TYPE    I. "NUMC 타입의 할인율을 Int로 저장하는 임시변수
+
+* 테이블에서 해당 ID와 일치하는 테이터 추출
+SELECT SINGLE ID NAME COUNTRY STREET DISCOUNT
+  INTO ( gv_id, gv_name, gv_count, gv_addr, gv_disc )
+  FROM SCUSTOM
+  WHERE ID = pa_id.
+
+* 성공여부에 따라서 결과값 반환
+IF sy-subrc = 0.
+  gv_tmp = gv_disc. " 할인율 Int 형식으로 저장
+  WRITE: / | Information of ID: { pa_id }|.
+  WRITE: / | Name: { gv_name } |.
+  WRITE: / | Country: { gv_count } |.
+  WRITE: / | Address: { gv_addr } |.
+  WRITE: / | Discount Rate: { gv_tmp }% |.
+ELSE.
+  WRITE: / | ID not found! |.
+ENDIF.
