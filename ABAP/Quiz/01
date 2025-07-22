@@ -1,0 +1,16 @@
+*&---------------------------------------------------------------------*
+*& Report ZFIRST_A_02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZFIRST_A_02.
+
+write 'ABAP Workbench'.
+
+parameters: pa_name type string,
+            pa-age type I,
+            pa_addr type string obligatory.
+
+NEW-LINE.
+
+write: pa_name, pa_addr.
