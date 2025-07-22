@@ -1,0 +1,42 @@
+*&---------------------------------------------------------------------*
+*& Report ZQUIZ_03_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQUIZ_03_A02.
+
+PARAMETERS: num  TYPE i,
+            mode TYPE c LENGTH 1.
+
+DATA: sum TYPE i VALUE 0,
+      cnt TYPE i VALUE 0.
+
+* num 값의 범위 예외처리
+IF num < 0 or num > 1000.
+  WRITE 'enter number between 0 ~ 1000'.
+  EXIT.
+ENDIF.
+
+* MODE 별로 SUM 연산 로직 분기
+IF mode = 'O'. "홀수의 합을 더하는 경우
+  WHILE cnt <= num.
+    cnt = cnt + 1.
+    IF cnt mod 2 <> 0.
+      sum = sum + cnt.
+    ENDIF.
+  ENDWHILE.
+  WRITE | Odd sum is { sum } |.
+
+ELSEIF mode = 'E'. "짝수의 합을 더하는 경우
+  WHILE cnt <= num.
+    cnt = cnt + 1.
+    IF cnt mod 2 = 0.
+      sum = sum + cnt.
+    ENDIF.
+  ENDWHILE.
+  WRITE | Even sum is { sum } |.
+
+ELSE. " 이외의 MODE 연산자인 경우
+  WRITE: | invalid mode. try again please. |.
+  EXIT.
+ENDIF.
