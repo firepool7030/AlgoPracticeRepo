@@ -1,0 +1,74 @@
+*&---------------------------------------------------------------------*
+*& Report ZCA_EXERCISE13_A_02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZCA_EXERCISE13_A_02.
+
+" 새로운 구조체 타입 선언 -> 항공편과 항공 정보를 모두 저장하는 structure 구조
+TYPES: BEGIN OF ts_carrierflight,
+    carrid       TYPE    bc400_s_flight-carrid,
+    connid       TYPE    bc400_s_flight-connid,
+    fldate       TYPE    bc400_s_flight-fldate,
+    seatsmax     TYPE    bc400_s_flight-seatsmax,
+    seatsocc     TYPE    bc400_s_flight-seatsocc,
+    percentage   TYPE    bc400_s_flight-percentage,
+    carrname     TYPE    bc400_s_carrier-carrname,
+    currcode     TYPE    bc400_s_carrier-currcode,
+    url          TYPE    bc400_s_carrier-url,
+  END OF ts_carrierflight.
+
+" 기존의 Structure 테이블 타입을 저장하는 변수 2개와 이 변수들의 정보를 합해서 저장하는 최종 출력 Structure형 테이블 타입 변수 지정
+DATA: gs_carrier        TYPE bc400_s_carrier,
+      gs_flight         TYPE bc400_s_flight,
+      gs_carrierflight  TYPE ts_carrierflight.
+
+" 입력받을 항공편 정보 선언
+" 1. 항공사 아이디   (AA)
+" 2. 항공편 번호    (1234)
+" 3. 운항 일자     (2025.05.05)
+PARAMETERS: pa_car  TYPE bc400_s_flight-carrid,
+            pa_con  TYPE bc400_s_flight-connid,
+            pa_date TYPE bc400_s_flight-fldate.
+
+" cl_bc400_flightmodel 클래스 안에 정의된 메서드를 사용해서 입력받은 항공편 정보 조회
+TRY.
+  CALL METHOD cl_bc400_flightmodel=>get_flight " 1. 항공편 정보 조회 메서드
+    EXPORTING
+      iv_carrid  = pa_car
+      iv_connid  = pa_con
+      iv_fldate  = pa_date
+    IMPORTING
+      es_flight  = gs_flight.
+
+  CALL METHOD cl_bc400_flightmodel=>get_carrier " 2. 항공사 정보 조회 메서드
+    EXPORTING
+      iv_carrid  = pa_car
+    IMPORTING
+      es_carrier = gs_carrier.
+
+  " 3. 예외처리
+  CATCH cx_bc400_no_data.
+    WRITE 'No data found!'.
+    EXIT.
+  CATCH cx_bc400_no_auth.
+    WRITE 'No authority for this carrier!'.
+    EXIT.
+ENDTRY.
+
+" 조회받은 정보를 직접 지정한 데이터 타입에 저장
+MOVE-CORRESPONDING gs_carrier TO gs_carrierflight.
+MOVE-CORRESPONDING gs_flight  TO gs_carrierflight.
+
+" 조회된 정보가 존재하면 해당 항공편과 운행편의 정보 출력.
+IF gs_carrierflight IS NOT INITIAL.
+  WRITE: / gs_carrierflight-carrid,
+           gs_carrierflight-connid,
+           gs_carrierflight-fldate,
+           gs_carrierflight-carrname,
+           gs_carrierflight-currcode,
+           gs_carrierflight-seatsmax,
+           gs_carrierflight-seatsocc,
+           gs_carrierflight-percentage,
+           gs_carrierflight-url.
+ENDIF.
