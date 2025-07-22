@@ -1,0 +1,32 @@
+REPORT zquiz_02_a02.
+
+PARAMETERS: f_name   TYPE c LENGTH 32 OBLIGATORY,
+            lastname TYPE c LENGTH 16 OBLIGATORY,
+            birthday TYPE d           OBLIGATORY,
+            mode     TYPE c LENGTH 1  OBLIGATORY.
+
+* 나이 데이터 선언
+DATA: age TYPE i.
+
+* 생일이 현 시점보다 미래의 날짜인 경우 예외처리 및 프로그램 종료
+IF birthday > sy-datum.
+  WRITE: 'How are you born in the future?? Input a valid Birth date.'.
+  EXIT.
+ENDIF.
+
+* 나이 계산 로직 분기
+IF mode = '1'.
+  " 만나이 계산
+  age = sy-datum+0(4) - birthday+0(4).
+  IF birthday+4(2) > sy-datum+4(2)
+     OR ( birthday+4(2) = sy-datum+4(2) AND birthday+6(2) > sy-datum+6(2) ).
+    age = age - 1.
+  ENDIF.
+  WRITE: |HI! { f_name }, { lastname } Korean legal age is { age }|.
+ELSEIF mode = '2'.
+  " 년나이 계산
+  age = sy-datum+0(4) - birthday+0(4) + 1.
+  WRITE: |HI! { f_name }, { lastname } Korean age is { age }|.
+ELSE.
+  WRITE: 'The Mode must be either 1 or 2. Ending Program'.
+ENDIF.
