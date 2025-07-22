@@ -1,0 +1,51 @@
+*&---------------------------------------------------------------------*
+*& Report ZQUIZ_08_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQUIZ_08_A02.
+
+DATA:       gv_countfr TYPE  LAND1,
+            gv_countto TYPE  LAND1,
+            gv_cityfr  TYPE  S_FROM_CIT,
+            gv_cityto  TYPE  S_TO_CITY,
+            gv_ftype   TYPE  TEXT32.
+
+PARAMETERS: pa_carid  TYPE  S_CARR_ID,
+            pa_conid  TYPE  S_CONN_ID.
+
+* 함수 호출
+CALL FUNCTION 'ZGET_CONNECTION_A02'
+  EXPORTING
+    i_carrid       = pa_carid
+    i_connid       = pa_conid
+  IMPORTING
+    E_COUNTRYFR    = gv_countfr
+    E_CITYFROM     = gv_cityfr
+    E_COUNTRYTO    = gv_countto
+    E_CITYTO       = gv_cityto
+  EXCEPTIONS
+    INVALID_INFO   = 1
+    OTHERS         = 2.
+
+CASE sy-subrc.
+
+  " 1. 정상 테스트케이스인 경우
+  WHEN 0.
+    " 국내선 / 국제선 여부를 판단하는 분기점
+    IF gv_countfr = gv_countto.
+      gv_ftype = 'Domestic'.
+    ELSE.
+      gv_ftype = 'International'.
+    ENDIF.
+    WRITE: |{ gv_ftype } / Flight { pa_conid } / Departure from { gv_countfr } { gv_cityfr } / Arriving at { gv_countto } { gv_cityto }|.
+
+  " 2. 오정보 입력 경우 예외처리
+  WHEN 1.
+    WRITE: |Invalid Flight Information!|.
+
+  " 3. 시스템 이상 예외처리
+  WHEN OTHERS.
+    WRITE: |System Error!|.
+
+ENDCASE.
