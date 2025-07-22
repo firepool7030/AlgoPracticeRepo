@@ -1,0 +1,70 @@
+*&---------------------------------------------------------------------*
+*& Report ZQUIZ_07_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQUIZ_07_A02.
+
+DATA: " 출력에 사용하는 변수
+      name   TYPE  SCUSTOM-NAME,
+      addr   TYPE  TEXT128,
+      disc   TYPE  SCUSTOM-DISCOUNT,
+      tmp    TYPE i,
+      grade   TYPE string,
+      " 반복문에 사용되는 테이블과 테이블의 idx 변수 선언
+      lt_ids TYPE TABLE OF s_customer,
+      lv_id  TYPE s_customer.
+
+PARAMETERS: " ID 3개 입력
+      pa_id1 TYPE  S_CUSTOMER OBLIGATORY,
+      pa_id2 TYPE  S_CUSTOMER OBLIGATORY,
+      pa_id3 TYPE  S_CUSTOMER OBLIGATORY.
+
+* 정보 출력을 반복할 ID를 테이블에 저장해서 LOOP
+APPEND pa_id1 TO lt_ids.
+APPEND pa_id2 TO lt_ids.
+APPEND pa_id3 TO lt_ids.
+
+* ID 3개를 각각 LOOP를 순회하며 정보 출력
+LOOP AT lt_ids INTO lv_id.
+  " 함수 호출 후 필요한 파라미터 정보 입력
+  CALL FUNCTION 'GET_CUSTOMER'
+      EXPORTING
+        i_id                   = lv_id
+      IMPORTING
+        E_NAME                 = name
+        E_ADDRESS              = addr
+        E_DISCOUNT             = disc
+      EXCEPTIONS
+        INVALID_CUSTOMER       = 1
+        OTHERS                 = 2.
+
+  " 각 CASE별로 분기
+  CASE sy-subrc.
+    WHEN 0. " 1. 성공적으로 값을 반환받은 경우 각 할인율에 맞게 DISCOUNT 정보 입력
+      tmp = CONV i( disc ).
+      IF tmp >= 20.
+        grade = | { tmp }% GOLD |.
+      ELSEIF tmp >= 10.
+        grade = | { tmp }% SILVER |.
+      ELSE.
+        grade = | { tmp }% BRONZE |.
+      ENDIF.
+
+      " 할인 정보에 맞는 각 고객 정보 출력
+      WRITE: / | { lv_id WIDTH = 12 } { name WIDTH = 20 } { addr WIDTH = 50 } { grade } |.
+      SKIP.
+      ULINE.
+    " 2. 고객 정보가 테이블에 없는 경우 에러 출력
+    WHEN 1.
+      WRITE: /'Invalid Customer' COLOR 6.
+      SKIP.
+      ULINE.
+    " 3. 출력오류의 원인을 모르는 경우 에러 출력
+    WHEN OTHERS.
+      WRITE: /'System Error!'.
+      SKIP.
+      ULINE.
+  ENDCASE.
+
+ENDLOOP.
