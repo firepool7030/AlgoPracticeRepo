@@ -1,0 +1,96 @@
+*&---------------------------------------------------------------------*
+*& Report ZQUIZ_06_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQUIZ_06_A02.
+
+* 화면에서 고객ID 3개를 입력받아서 해당 고객의 상세정보를 차례대로 출력하는 프로그램을 구현하시오.
+* 출력 양식
+      " ID     ADDRESS    NAME        Discount
+      " 123    (12345)    SMITH       10%  silver
+      "---------------------------------------------
+      " 312    (12354)    PUAL        20%  gold
+      "---------------------------------------------
+      " 321    (12453)    LOGAN       0%   bronze
+      "---------------------------------------------
+
+PARAMETERS: " ID 3개 입력
+            pa_id1      TYPE   S_CUSTOMER OBLIGATORY,
+            pa_id2      TYPE   S_CUSTOMER OBLIGATORY,
+            pa_id3      TYPE   S_CUSTOMER OBLIGATORY.
+
+PERFORM OUTPUT_INFO USING pa_id1.
+PERFORM OUTPUT_INFO USING pa_id2.
+PERFORM OUTPUT_INFO USING pa_id3.
+
+" ID에 해당하는 정보를 출력하는 서브루틴
+FORM OUTPUT_INFO
+  USING " ID 정보 사용
+            VALUE(f_id) TYPE   S_CUSTOMER.
+
+  DATA: " 출력에 사용하는 변수
+            loc_name     TYPE   S_CUSTNAME,
+            loc_disc     TYPE   S_DISCOUNT,
+            " 주소를 반환하는 서브루틴의 매개변수
+            loc_addr     TYPE   POSTCODE,
+            loc_count    TYPE   S_COUNTRY,
+            loc_reg      TYPE   S_REGION,
+            loc_city     TYPE   CITY,
+            loc_street   TYPE   S_STREET,
+            " 반환된 주소값을 저장하는 변수
+            addr         TYPE   string,
+            " discount int형을 저장하는 임시변수
+            loc_tmp      TYPE   i,
+            loc_grade    TYPE   string.
+
+  SELECT SINGLE NAME DISCOUNT POSTCODE COUNTRY REGION CITY STREET
+    INTO ( loc_name, loc_disc, loc_addr, loc_count, loc_reg, loc_city, loc_street )
+    FROM SCUSTOM
+    WHERE ID = f_id.
+
+  IF sy-subrc <> 0. " 예외값 먼저 처리: ID가 TABLE안에 없는 경우 에러값을 반환
+    WRITE: / | Invalid Customer. | COLOR 6.
+    SKIP.
+    ULINE.
+
+  ELSE. " ID가 TABLE안에 존재하는 경우 출력값을 반환
+
+    " 1. ID값이 유효하다면 서브루틴에서 고객의 주소를 addr변수에 저장하기
+    PERFORM OWN USING loc_addr loc_count loc_reg loc_city loc_street CHANGING addr.
+
+    " 2. ID값이 유효하다면 discount에 따라서 분기
+    loc_tmp = CONV i( loc_disc ).
+    IF loc_disc >= 20.
+      loc_grade = | { loc_tmp }% GOLD |.
+    ELSEIF loc_disc >= 10.
+      loc_grade = | { loc_tmp }% SILVER |.
+    ELSE.
+      loc_grade = | { loc_tmp }% BRONZE |.
+    ENDIF.
+
+    " 3. 출력
+    WRITE: / | { f_id  WIDTH = 8 }: { loc_name  WIDTH = 15 } { addr WIDTH = 50 } { loc_grade WIDTH = 10 }|.
+    SKIP.
+    ULINE.
+
+  ENDIF.
+
+ENDFORM.
+
+
+" 정보를 입력해서 출력을 해주는 서브루틴
+FORM OWN
+  USING "call by value
+        VALUE(addr)    TYPE  POSTCODE
+        VALUE(count)   TYPE  S_COUNTRY
+        VALUE(reg)     TYPE  S_REGION
+        VALUE(city)    TYPE  CITY
+        VALUE(street)  TYPE  S_STREET
+  CHANGING
+        VALUE(rtn_address) TYPE string.
+
+  " 주소 정보 문자열로 저장해서 반환
+  rtn_address = | ({ addr }) { count } { reg } { city } { street } |.
+
+ENDFORM.
