@@ -1,0 +1,23 @@
+*  &---------------------------------------------------------------------*
+*  & Report ZQUIZ_10_A02
+*  &---------------------------------------------------------------------*
+*  &
+*  &---------------------------------------------------------------------*
+  REPORT ZQUIZ_10_A02.
+
+  " 1. 항공사코드, 고객아이디, 고객이름으로 구성된 라인타입을 정의하시오.
+  TYPES: BEGIN OF ts_flight,
+           code TYPE scarr-currcode,
+           id   TYPE scustom-id,
+           name TYPE scustom-name,
+         END OF ts_flight.
+
+  " 2. 1번에 정의한 라인 타입을 이용해서 테이블 타입을 정의하시오.
+  "    이름: TT_CARRIER_CUSTOM
+  "    단) 데이터가 저장시 항송사 코드, 고객 ID로 자동 정렬되게 설계.
+  "       항공사 코드, 고객ID가 중복되는 데이터는 삽입 불가
+  TYPES: TT_CARRIER_CUSTOM TYPE SORTED TABLE OF ts_flight
+                            WITH UNIQUE KEY id.
+
+  " 3. 2번에서 정의한 타입을 이용해서 인터널 테이블을 정의하시오. (GT_CAR_CUST)
+  DATA: GT_CAR_CUST TYPE TT_CARRIER_CUSTOM.
