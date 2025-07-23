@@ -1,0 +1,72 @@
+*&---------------------------------------------------------------------*
+*& Report ZQUIZ_11_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQUIZ_11_A02.
+
+" 검색 조건에서 고객 ID를 입력 받아서 해당 고객이 예약한 총 항공권 권수와 취소한 건수를 출력하는 프로그램을 구현
+" 데이터 취득: CL_BC400_FLIGHTMODEL / Method: get_bookings_by_cust
+" 입력예시: Customer1
+" 출력예시: Customer 1 SAP AG         <- 아이디와 이름 출력
+"        Total bookings:    32 count
+"        Confirm bookings:  30 count
+"        Cancel bookings:    2 count
+" (취소된 내역은 CANCELLED 값이 'X'인 건이 취소된 건임)
+
+TYPES: BEGIN OF ts_booking,
+          id      TYPE scustom-id,
+          name    TYPE scustom-name,
+          total   TYPE i,
+          confirm TYPE i,
+          cancel  TYPE i,
+      END OF ts_booking.
+
+PARAMETERS: pa_id TYPE BC400_S_BOOKING-CUSTOMID.
+
+DATA: gt_custom    TYPE bc400_t_bookings.           " 내부테이블 변수
+DATA: gw_custom    TYPE LINE OF bc400_t_bookings.   " 워크에어리어 (필요할 경우)
+DATA: booking_info TYPE ts_booking.
+
+* 고객 ID에 해당하는 정보 반환
+TRY.
+  CALL METHOD cl_bc400_flightmodel=>get_bookings_by_cust
+    EXPORTING
+      iv_customid = pa_id
+    IMPORTING
+      et_bookings = gt_custom.
+  CATCH cx_bc400_no_data.
+    WRITE: / 'No data found!!!'.
+    EXIT.
+ENDTRY.
+
+* 반환된 정보를 사용해서 사용자 정보를 저장하는 회원 구조체 변수에 정보 저장"""""""""
+booking_info-id = pa_id.
+
+SELECT SINGLE NAME
+  INTO booking_info-name
+  FROM SCUSTOM "gt_custom
+  WHERE ID = pa_id.
+
+booking_info-total = LINES( gt_custom ).
+
+SELECT COUNT(*)
+  INTO booking_info-cancel
+  FROM sbook "gt_custom
+  WHERE CANCELLED = 'X' and CUSTOMID = pa_id.
+
+booking_info-confirm = booking_info-total - booking_info-cancel.
+
+""""""""""""""""""
+
+" 회원 예약 정보 출력
+WRITE: |ID: { booking_info-id }|,
+       / |NAME: { booking_info-name }|,
+       / |Total Booking Count: { booking_info-total }|,
+       / |Confirmed Booking Count: { booking_info-confirm }|,
+       / |Canceled Booking Count: { booking_info-cancel }|.
+
+" 반환된 테이블 데이터 조회
+*CALL METHOD cl_demo_output=>display_data
+*  EXPORTING
+*    value = gt_custom.
