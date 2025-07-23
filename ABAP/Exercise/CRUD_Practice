@@ -1,0 +1,80 @@
+*&---------------------------------------------------------------------*
+*& Report ZCA_00013_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZCA_00013_A02.
+
+*DATA: gt_flight TYPE bc400_t_flights.
+
+TYPES: BEGIN OF ts_custom,
+          ID   TYPE scustom-id,
+          NAME TYPE scustom-name,
+          AGE  TYPE N LENGTH 3,
+      END OF ts_custom.
+
+TYPES: tt_custom TYPE STANDARD TABLE OF ts_custom
+                 WITH NON-UNIQUE KEY id.
+
+" 배열
+DATA gt_custom TYPE tt_custom.
+
+" 1번 방식
+DATA gw_custom1 TYPE ts_custom.
+" 2번 방식
+DATA gw_custom2 TYPE LINE OF tt_custom.
+" 3번 방식 --> 3번 방식 추천
+DATA gw_custom3 LIKE LINE OF gt_custom.
+
+" APPEND & INSERT
+gw_custom3-id = 1.
+gw_custom3-name ='홍길동'.
+gw_custom3-age = 34.
+APPEND gw_custom3 TO gt_custom.
+clear gw_custom3.
+
+gw_custom3-id = 2.
+gw_custom3-age = 23.
+APPEND gw_custom3 TO gt_custom.
+clear gw_custom3.
+
+gw_custom3-id = 3.
+gw_custom3-name ='김철수'.
+gw_custom3-age = 22.
+INSERT gw_custom3 INTO TABLE gt_custom.
+clear gw_custom3.
+
+" READ
+" 1. Index 접근 READ
+READ TABLE gt_custom INTO gw_custom3 index 2.
+WRITE gw_custom3-id.
+SKIP.
+ULINE.
+
+" 2. KEY 접근 READ
+clear gw_custom3.
+READ TABLE gt_custom INTO gw_custom3 WITH KEY age = 22. " 무조건 and와 equal값만 가능하다!
+IF sy-subrc <> 0.
+  WRITE 'Error!!'.
+ELSE.
+  WRITE: gw_custom3-id, gw_custom3-name.
+  SKIP.
+  ULINE.
+ENDIF.
+
+" CHANGE
+clear gw_custom3.
+READ TABLE gt_custom INTO gw_custom3 WITH KEY name = ''.
+IF sy-subrc <> 0.
+  WRITE 'Error while changing data'.
+ELSE.
+  gw_custom3-name = '이원준'.
+  MODIFY TABLE gt_custom FROM gw_custom3.
+ENDIF.
+
+" DELETE
+DELETE gt_custom WHERE name is INITIAL.
+
+CALL METHOD cl_demo_output=>display_data
+  EXPORTING
+    value  =  gt_custom.
