@@ -1,0 +1,119 @@
+*&---------------------------------------------------------------------*
+*& Report ZQUIZ_12_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQUIZ_12_A02.
+
+" 화면에서 항공사 코드, 항공편, 항공일자를 입력 받아서 고객 유형별 예약건수, 확정건수, 취소건수를 분류하는 프로그램을 구하시오.
+" 데이터 취득: CL_BC400_FLIGHTMODEL, METHOD: get_bookings
+" 입력예시
+"        Carrier: ____ / Connection: ____ / Flight Date: ____
+" 출력예시 (고객 유형 B / P에 따라서 buisness / private customer가 정해진다)
+"        Buisness Customer 80%
+"             total:   10
+"             confirm:  8
+"             cancel:   2
+"        Private Customer 40%
+"             total:   10
+"             confirm:  4
+"             cancel:   6
+
+TYPES: tv_result TYPE p LENGTH 16 DECIMALS 2. " 백분율 타입 선언
+
+PARAMETERS: pa_carr  TYPE BC400_S_BOOKING-CARRID, " 항공사 코드 입력
+            pa_conn  TYPE BC400_S_BOOKING-CONNID, " 항공편 번호 입력
+            pa_fdate TYPE BC400_S_BOOKING-FLDATE. " 운행 일자 입력
+
+DATA: gt_bookings       TYPE BC400_T_BOOKINGS, " 반환 받을 테이블 타입의 변수 -> 전체 항공편 데이터
+      gt_bookings_ptype TYPE BC400_T_BOOKINGS, " 반환 받을 테이블 타입의 변수 -> Private  TYPE 데이터 분리
+      gt_bookings_btype TYPE BC400_T_BOOKINGS, " 반환 받을 테이블 타입의 변수 -> Buisness TYPE 데이터 분리
+      gw_bookings       TYPE BC400_S_BOOKING.  " 테이블의 구조체 변수
+
+TRY. " 위에서 입력받은 정보를 사용해서 일치하는 데이터 테이블 형태로 반환
+
+  CALL METHOD cl_bc400_flightmodel=>get_bookings
+    EXPORTING
+      iv_carrid   =  pa_carr
+      iv_connid   =  pa_conn
+      iv_fldate   =  pa_fdate
+    IMPORTING
+      et_bookings = gt_bookings.
+
+  CATCH cx_bc400_no_data.
+    WRITE: 'No Matched Data Found!'.
+
+ENDTRY.
+
+" 반환받은 데이터 조회 메서드 (임시코드)
+*CALL METHOD cl_demo_output=>display_data
+*  EXPORTING
+*    value  = gt_bookings.
+
+" Internal Table의 정보를 저장할 변수 선언
+DATA: total      TYPE i VALUE 0,
+      b_percent  TYPE p LENGTH 16 DECIMALS 2,
+      b_total    TYPE i VALUE 0,
+      b_confirm  TYPE i VALUE 0,
+      b_canceled TYPE i VALUE 0,
+      p_percent  TYPE p LENGTH 16 DECIMALS 2,
+      p_total    TYPE i VALUE 0,
+      p_confirm  TYPE i VALUE 0,
+      p_canceled TYPE i VALUE 0.
+
+" 파트너 유형에 따라서 internal table 분리 (B, P)
+LOOP AT gt_bookings INTO gw_bookings.
+  IF gw_bookings-custtype = 'B'.
+    APPEND gw_bookings TO gt_bookings_btype.
+    b_total = b_total + 1.
+    IF gw_bookings-cancelled = 'X'.
+      b_canceled = b_canceled + 1.
+    ENDIF.
+  ELSEIF gw_bookings-custtype = 'P'.
+    APPEND gw_bookings TO gt_bookings_ptype.
+    p_total = p_total + 1.
+    IF gw_bookings-cancelled = 'X'.
+      p_canceled = p_canceled + 1.
+    ENDIF.
+  ENDIF.
+  total = total + 1.
+ENDLOOP.
+
+" 총 Booking 개수 customer type에 따라 분리해서 저장
+b_confirm = b_total - b_canceled.
+p_confirm = p_total - p_canceled.
+
+" 총 Booking Percentage 계산 후 변수에 저장
+PERFORM calc_percentage USING b_total total CHANGING b_percent.
+PERFORM calc_percentage USING p_total total CHANGING p_percent.
+
+" 처음에 입력한 항공 정보에 따른 출력값
+WRITE: / 'Flight Information',
+      / '   carrid:        ', pa_carr,
+      / '   connid:        ', pa_conn,
+      / '   flight date:   ', pa_fdate.
+SKIP.
+ULINE.
+
+WRITE: / 'Buisness Customer',
+      / '   percentage ( Buisness Customer Type / Total Booking ):   ', b_percent LEFT-JUSTIFIED,
+      / '   total:   ', b_total,
+      / '   confirm: ', b_confirm,
+      / '   cancel:  ', b_canceled.
+
+WRITE: / 'Private Customer',
+      / '   percentage ( Private Customer Type / Total Booking ):   ', p_percent LEFT-JUSTIFIED,
+      / '   total:   ', p_total,
+      / '   confirm: ', p_confirm,
+      / '   cancel:  ', p_canceled.
+
+FORM calc_percentage USING    pa_act   TYPE i
+                              pa_max   TYPE i
+                     CHANGING cv_result TYPE tv_result.
+  IF pa_max = 0.
+    cv_result = 0.
+    WRITE 'Error while calculating!'.
+  ELSE.
+    cv_result = pa_act * 100 / pa_max.
+  ENDIF.
+ENDFORM.
