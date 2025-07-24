@@ -1,0 +1,57 @@
+*&---------------------------------------------------------------------*
+*& Report ZCA_00016_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZCA_00016_A02.
+
+* 1) SELECT LOOP
+* 2) Array Fetch = Internal Table
+* ID, Name, Telephone, Email
+
+" 구조체 타입 선언
+TYPES: BEGIN OF ts_custom,
+         id         TYPE scustom-id,
+         name       TYPE scustom-name,
+         telephone  TYPE scustom-telephone,
+         email      TYPE scustom-email,
+END OF ts_custom.
+
+" 테이블 타입 선언
+TYPES: tt_custom TYPE SORTED TABLE OF ts_custom
+      WITH UNIQUE KEY id.
+
+DATA: gt_custom TYPE tt_custom.
+PARAMETERS: pa_land TYPE scustom-country.
+
+* Array Fetch = 인터널 테이블에 한방에 담겠다.
+SELECT ID NAME TELEPHONE EMAIL
+  FROM SCUSTOM
+  INTO CORRESPONDING FIELDS OF TABLE gt_custom
+  WHERE country = pa_land.
+
+" 인터널 테이블을 서브루틴에 반환해서 내부 정보를 수정한다.
+PERFORM fill_unknown CHANGING gt_custom.
+cl_demo_output=>display( gt_custom ).
+
+" 인터널 테이블 내부를 수정하는 함수
+FORM fill_unknown CHANGING lc_customs TYPE tt_custom. "Table 타입을 밖에서 명시해서 사용하자.
+  DATA: lc_custom TYPE ts_custom.
+
+  " where로 조건을 맞춰야지 시간복잡도가 줄어든다. -> tel, email의 정보가 비어있는 경우만 순회를 한다! -> 이중 순회 방지
+  LOOP AT lc_customs INTO lc_custom WHERE telephone IS INITIAL or email is INITIAL.
+
+    IF lc_custom-telephone IS INITIAL.
+      lc_custom-telephone = 'UNKNOWN'.
+    ENDIF.
+    IF lc_custom-email IS INITIAL.
+      lc_custom-email = 'UNKNOWN'.
+    ENDIF.
+
+    " work area를 사용해서 Internal Table을 수정해야 한다.
+    MODIFY lc_customs FROM lc_custom INDEX sy-tabix. " 해당 idx의 구저체 정보를 최종 수정하는 구문
+    MODIFY TABLE lc_customs FROM lc_custom.
+
+  ENDLOOP.
+
+ENDFORM.
