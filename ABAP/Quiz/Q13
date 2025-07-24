@@ -1,0 +1,21 @@
+*&---------------------------------------------------------------------*
+*& Report ZQUIZ_13_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQUIZ_13_A02.
+
+DATA: gs_scarr TYPE scustom.
+
+PARAMETERS pa_code TYPE scustom-country.
+
+" 조건에 만족하는 모든 데이터를 조회 => LOOP과 같다.
+SELECT *
+
+  from scustom
+  into CORRESPONDING FIELDS OF gs_scarr
+  WHERE country = pa_code.
+
+  WRITE: / gs_scarr-id, '   ', gs_scarr-name, '   ', gs_scarr-telephone, '   ',gs_scarr-email.
+
+ENDSELECT.
