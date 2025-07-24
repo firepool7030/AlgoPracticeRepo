@@ -5,7 +5,9 @@
 *&---------------------------------------------------------------------*
 REPORT ZQUIZ_13_A02.
 
-DATA: gs_scarr TYPE scustom.
+DATA: gs_scarr   TYPE scustom,
+      flag_email TYPE i VALUE 0,
+      flag_phone TYPE i VALUE 0.
 
 PARAMETERS pa_code TYPE scustom-country.
 
@@ -16,6 +18,18 @@ SELECT *
   into CORRESPONDING FIELDS OF gs_scarr
   WHERE country = pa_code.
 
-  WRITE: / gs_scarr-id, '   ', gs_scarr-name, '   ', gs_scarr-telephone, '   ',gs_scarr-email.
+  WRITE: / gs_scarr-id, '   ', gs_scarr-name, '  '.
+
+  IF gs_scarr-telephone is INITIAL.
+    WRITE: 'Unknown                       ' COLOR 6.
+  ELSE.
+    WRITE: gs_scarr-telephone COLOR 2.
+  ENDIF.
+
+  IF gs_scarr-email is INITIAL.
+    WRITE: 'Unknown                                 ' COLOR 6.
+  ELSE.
+    WRITE: gs_scarr-email COLOR 2.
+  ENDIF.
 
 ENDSELECT.
