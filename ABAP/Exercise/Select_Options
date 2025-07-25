@@ -17,4 +17,7 @@ gt_carrier-carrid = 'AA'.
 gt_carrier-carrname = 'New Airline'.
 
 APPEND gt_carrier to gt_carrier. " 인터널 테이블과 워크 에리어 이름이 같다..!
-APPEND gt_carrier " 이름이 같으면 생략이 가능하다..!
+APPEND gt_carrier. " 이름이 같으면 생략이 가능하다..!
+
+CLEAR gt_carrier.   " workarea 지우기
+CLEAR gt_carrier[]. " Internal Table 지우기 
