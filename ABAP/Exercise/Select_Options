@@ -1,0 +1,20 @@
+*&---------------------------------------------------------------------*
+*& Report ZCA_00020_A02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZCA_00020_A02.
+
+* 인터널 테이블의 종류
+* 1) Internal table without header line
+* 2) Internal talbe with    header line
+
+* Internal Table과 Work Area가 2개 동시에 만들어짐
+DATA gt_carrier TYPE TABLE OF scarr with HEADER LINE.
+
+*Append a To b
+gt_carrier-carrid = 'AA'.
+gt_carrier-carrname = 'New Airline'.
+
+APPEND gt_carrier to gt_carrier. " 인터널 테이블과 워크 에리어 이름이 같다..!
+APPEND gt_carrier " 이름이 같으면 생략이 가능하다..!
