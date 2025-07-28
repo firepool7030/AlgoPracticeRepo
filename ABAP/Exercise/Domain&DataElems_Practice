@@ -1,0 +1,22 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_A02_DATA_ELEMENTS
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC430_A02_DATA_ELEMENTS.
+
+PARAMETERS: pa_fname TYPE zfirstnameA02,
+            pa_lname TYPE zlastnameA02,
+            pa_activ TYPE zassets_a02,
+            pa_liabs TYPE zliabilities_a02.
+
+DATA result TYPE zassets_a02.
+
+START-OF-SELECTION.
+  NEW-LINE.
+  WRITE: 'Client:', pa_fname, pa_lname.
+
+  result = pa_activ - pa_liabs.
+  NEW-LINE.
+
+  WRITE: 'Finance:', pa_activ, pa_liabs, result.
