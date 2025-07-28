@@ -20,3 +20,31 @@ START-OF-SELECTION.
   NEW-LINE.
 
   WRITE: 'Finance:', pa_activ, pa_liabs, result.
+
+
+*&---------------------------------------------------------------------*
+*& Report ZCA_B4_EXERCISE02_A_02
+*&---------------------------------------------------------------------*
+*& 다중 구초제 배열을 사용하는 e.g. 2번
+*&---------------------------------------------------------------------*
+REPORT ZCA_B4_EXERCISE02_A_02.
+
+DATA wa_person TYPE zperson_a02.
+
+START-OF-SELECTION.
+
+  wa_person-name-firstname = 'harry'.
+  wa_person-name-lastname =  'potter'.
+
+  wa_person-street = 'private drive'.
+  wa_person-nr = '3'.
+  wa_person-zip = 'GB-10889'.
+  wa_person-city = 'London'.
+
+
+  WRITE: / 'First Name:', wa_person-name-firstname,
+       / 'Last Name:', wa_person-name-lastname,
+       / 'Street:', wa_person-street,
+       / 'Number:', wa_person-nr,
+       / 'ZIP:', wa_person-zip,
+       / 'City:', wa_person-city.
