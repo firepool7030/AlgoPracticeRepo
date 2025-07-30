@@ -1,0 +1,207 @@
+REPORT ZCA_Q2_A02.
+*=========================================================================
+* 아이콘 사용 선언
+TYPE-POOLS: icon.
+
+* 구조체 내부 테이블의 구조체 타입 선언
+TYPES: BEGIN OF ty_structure,
+      nr       TYPE i,
+      odr_date TYPE sbook-order_date,
+      class    TYPE sbook-class,
+      invoice  TYPE sbook-invoice,
+      weight   TYPE sbook-luggweight,
+      wunit    TYPE sbook-wunit,
+      days     TYPE i,
+  END OF ty_structure.
+
+* 내부 테이블 타입 선언
+TYPES tt_structure TYPE STANDARD TABLE OF ty_structure WITH DEFAULT KEY.
+
+* 예약 정보 구조체 타입 선언
+TYPES: BEGIN OF ty_booking,
+      id       TYPE sbook-customid,
+      name     TYPE scustom-name,
+      bookings TYPE tt_structure,
+  END OF ty_booking.
+
+* 예약 정보 테이블 타입 선언
+TYPES tt_booking TYPE TABLE OF ty_booking.
+
+" raw 데이터 테이블 타입 선언 (name이 포함된 sbook 테이블 타입)
+TYPES: BEGIN OF ty_raw,
+      customid    TYPE sbook-customid,
+      name        TYPE scustom-name,
+      order_date  TYPE sbook-order_date,
+      class       TYPE sbook-class,
+      invoice     TYPE sbook-invoice,
+      luggweight  TYPE sbook-luggweight,
+      wunit       TYPE sbook-wunit,
+      fldate      TYPE sbook-fldate,
+  END OF ty_raw.
+
+DATA: ls_str  TYPE ty_structure,
+      ls_book TYPE ty_booking.
+
+* ID, 주문일자 범위 입력
+SELECT-OPTIONS: pa_id    FOR ls_book-id      OBLIGATORY,
+                pa_odate FOR ls_str-odr_date OBLIGATORY.
+
+*=========================================================================
+
+INITIALIZATION.
+  PERFORM init.
+
+AT SELECTION-SCREEN.
+
+
+START-OF-SELECTION.
+  PERFORM main.
+
+*=========================================================================
+
+* 초기화 서브루틴
+FORM init.
+  pa_odate-low = sy-datum(4) && '0101'. " 올해 1월 1일
+  pa_odate-high = sy-datum.            " 오늘 날짜
+  APPEND pa_odate.
+ENDFORM.
+
+* 메인 서브루틴
+FORM main.
+  " raw 테이블 데이터 선언
+  DATA: lt_raw TYPE TABLE OF ty_raw,
+        ls_raw TYPE ty_raw.
+
+  " 입력한 범위값 안에 해당하는 데이터만 추출
+  SELECT a~customid, b~name, a~order_date, a~class, a~invoice, a~luggweight, a~wunit, a~fldate
+    FROM sbook AS a
+    INNER JOIN scustom AS b ON a~customid = b~id
+    WHERE a~customid IN @pa_id
+      AND a~order_date IN @pa_odate
+      AND a~reserved = 'X'
+      AND a~cancelled <> 'X'
+    INTO TABLE @lt_raw.
+
+  " raw innter table 정렬
+  SORT lt_raw BY customid order_date DESCENDING.
+  " cl_demo_output=>display( lt_raw ).
+
+  " raw 데이터를 테이블에 저장하는 로직===============================================
+  " 최종 저장 테이블의 워크스페이스 선언
+  DATA: lt_booking TYPE tt_booking,  " (고객별 예약 현황 테이블)
+        wa_booking TYPE ty_booking,
+        wa_str     TYPE ty_structure.
+
+  " raw 테이블을 순회하면서 ID별 데이터를 lt_booking에 저장
+  LOOP AT lt_raw INTO ls_raw.
+    " 고객의 ID, Name 저장
+    wa_booking-id = ls_raw-customid.
+    wa_booking-name = ls_raw-name.
+
+    " 예약내역 구조체 생성
+    wa_str-nr        = lines( wa_booking-bookings ) + 1.
+    wa_str-odr_date  = ls_raw-order_date.
+    wa_str-class     = ls_raw-class.
+    wa_str-invoice   = ls_raw-invoice.
+    wa_str-weight    = ls_raw-luggweight.
+    wa_str-wunit     = ls_raw-wunit.
+    wa_str-days      = ls_raw-fldate - ls_raw-order_date.
+
+    " 예약 정보를 테이블에 append (이미 정렬이 되어 있다!)
+    APPEND wa_str TO wa_booking-bookings.
+
+    " 동일한 ID의 booking 정보들을 저장한 데이터 테이블을 lt_booking의 table에 저장
+    AT END OF customid.
+      APPEND wa_booking TO lt_booking.
+      CLEAR wa_booking. " clear로 청소
+    ENDAT.
+
+  ENDLOOP.
+
+  " 만약 마지막 고객이 AT END로 저장이 안 됐다면 (데이터 단건만 있을 경우)
+  IF wa_booking-id IS NOT INITIAL AND wa_booking-bookings IS NOT INITIAL.
+    APPEND wa_booking TO lt_booking.
+  ENDIF.
+
+  " 출력용 서브루틴 저장
+  PERFORM print_booking_data USING lt_booking.
+  PERFORM print_best_customer USING lt_booking.
+
+ENDFORM.
+
+" 각 고객 예약 현황 출력 서브루틴
+FORM print_booking_data USING it_booking TYPE tt_booking.
+
+  DATA: ls_booking TYPE LINE OF tt_booking, " 출력에 사용 변수
+        ls_str     TYPE LINE OF tt_structure,
+        lv_icon    TYPE icon-id. " 아이콘 변수 선언
+
+  " 각 고객이 예약한 현황 출력 (이중 loop 문 사용)
+  LOOP AT it_booking INTO ls_booking.
+
+    WRITE: / '고객명:', ls_booking-id, ls_booking-name.
+
+    LOOP AT ls_booking-bookings INTO ls_str.
+
+      IF ls_str-invoice = 'X'.
+        lv_icon = ICON_CHECKED.
+      ELSE.
+        lv_icon = ' '.
+      ENDIF.
+
+      " 예약 한 건당 원하는 필드 출력
+      WRITE: / ls_str-nr,                 '         ',
+               ls_str-odr_date,           '         ',
+               ls_str-class,              '         ',
+               lv_icon,                   '         ',
+               ls_str-weight UNIT ls_str-wunit,
+               ls_str-wunit,              '         ',
+               ls_str-days.
+    ENDLOOP.
+    ULINE.
+  ENDLOOP.
+
+ENDFORM.
+
+" Best Customer 산출 및 출력 서브루틴
+FORM print_best_customer USING it_booking TYPE tt_booking.
+
+  DATA: lt_best      TYPE TABLE OF scustom-name,
+        best_cnt     TYPE i VALUE 0,
+        total_cust   TYPE i,
+        best_name    TYPE scustom-name,
+        other_count  TYPE i,
+        best_str     TYPE string,
+        cnt          TYPE i,
+        wa_booking   TYPE ty_booking.
+
+  " 총 customer 계산
+  total_cust = lines( it_booking ).
+
+  " lt_booking, 즉 모든 회원들을 순회하며 최다 booking 고객정보 저장
+  LOOP AT it_booking INTO wa_booking.
+    cnt = lines( wa_booking-bookings ).
+
+    IF cnt > best_cnt.
+      best_cnt = cnt.
+      CLEAR lt_best.
+      APPEND wa_booking-name TO lt_best.
+    ELSEIF cnt = best_cnt.
+      APPEND wa_booking-name TO lt_best.
+    ENDIF.
+  ENDLOOP.
+
+  IF best_cnt > 0.
+    best_name = lt_best[ 1 ].
+    other_count = lines( lt_best ) - 1.
+
+    best_str = |{ best_cnt } { best_name }|.
+
+    IF other_count > 0.
+      best_str = |{ best_cnt } Bookings By Customer '{ best_name }' and { other_count - 1 } Others|.
+    ENDIF.
+
+    WRITE: / |Total Customer: { total_cust }, Best Customer: { best_str }|.
+  ENDIF.
+
+ENDFORM.
