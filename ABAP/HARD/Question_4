@@ -1,0 +1,189 @@
+*화면에서 조건을 입력 받아 과목별 학생을 출력하는 프로그램을 구현하고자 한다.
+*(본인 테이블 사용)
+*
+*입력 화면
+*  Nationality          ___
+*  Student ID          _____________ to _________________
+*  Subject              _____________ to _________________
+*
+*  Processing Option ___
+*
+*
+*출력 화면
+*
+*Subject                 Point
+*        ID     Name        Entry                       Score         Weight Score
+*==============================================================================================
+*Computer Science   3 Point
+*         1     홍길동      2023.12.31                     90                  270
+*         2     김철수      2021.09.18                     80                  240
+*----------------------------------------------------------------------------------------------
+*Finance Accounting 2 Point
+*         3     나신입      2023.12.31                     88                  176
+*         5     나복학      2021.09.18                     70                  140
+*
+*Total Student: 23
+*
+*구현 정보
+* 1. 성적테이블에 각 학생에 대해 과목들 성적을 임의로 넣을 것 (예: 1번학생 3개, 2번학생 5개 등등 갯수 상이하게 - 최소 15개 이상)
+*     (입력 시 입력 값 체크(학번, 과목, 점수)가 잘 수행되는지 확인)
+* 2. 화면에 출력 시 과목이름 순 / 학번순으로 출력하시오.
+* 3. Weight Score = 수강 과목의 학점 (Point) * 취득 점수
+* 4. 국적은 프로그램 구동 시 초기값으로 KO을 디폴트로 제공함
+* 5. 출력물의 Subject는 코드값이 아닌 텍스트임 (사용자가 로그인한 언어의 텍스트)
+*     만약, 과목 텍스트에 대해 번역된 텍스트가 없는 경우 EN을 디폴트로 취득하여 출력함
+*    (EN도 없는 경우는 "Need to be translated" 출력 - 노란색)
+* 6. 국적, 학번, 과목에는 적절한 F4 Help 가 제공되어야 함
+* 7 . Processing Option:
+*          A: 입력시 ABAP Join으로 데이터 취득
+*             (단, 과목에 대한 텍스트도 ABAP Join을 통해 한번에 처리토록 함)
+*          D: Database View를 통해 데이터 취득
+*             (단, 과목에 대한 텍스트는 Database View 구성시 제외하여야 함)
+
+
+
+
+
+REPORT zca_q4_a02.
+
+* 학생 정보 테이블 구조체 타입 정의
+TYPES: BEGIN OF ty_subject,
+      id           TYPE zstudent_a02-stdid,
+      name          TYPE zstudent_a02-ename,
+      entry         TYPE zstudent_a02-entry,
+      subject       TYPE zscore_a02-subject,
+      score         TYPE zscore_a02-score,
+      grade         TYPE zsubject_a02-grade,
+      langu         TYPE zsubject_a02t-langu,
+      subject_text  TYPE zsubject_a02t-text,
+  END OF ty_subject.
+
+* 학생 정보 테이블 타입 정의
+TYPES tt_subject TYPE TABLE OF ty_subject.
+
+DATA: ls_subject TYPE ty_subject,
+      gt_student TYPE tt_subject.
+
+* 국적, ID, 과목, Processing Option 입력
+PARAMETERS:     pa_nat  TYPE zstudent_a02-natio.
+SELECT-OPTIONS: pa_id   FOR  ls_subject-id       OBLIGATORY,
+                pa_subj FOR  ls_subject-subject  OBLIGATORY.
+PARAMETERS:     pa_opt  TYPE c LENGTH 1.
+
+* 메인 로직 ========================================================================
+INITIALIZATION.
+  PERFORM init.
+
+AT SELECTION-SCREEN.
+  PERFORM select.
+
+START-OF-SELECTION.
+  PERFORM main.
+
+* 서브루틴 =========================================================================
+
+FORM init .
+  pa_nat = 'KO'.
+  pa_opt = 'A'.
+
+  " pa_id는 1부터 10까지 범위 지정
+  CLEAR pa_id.
+  APPEND VALUE #( sign = 'I' option = 'BT' low = '1' high = '10' ) TO pa_id.
+  " pa_subj는 문자형 과목코드이므로 'ABAP'부터 'MATH'까지 범위 지정
+  CLEAR pa_subj.
+  APPEND VALUE #( sign = 'I' option = 'BT' low = 'ABAP' high = 'MATH' ) TO pa_subj.
+
+ENDFORM.
+
+FORM select .
+  IF pa_opt NE 'A' AND pa_opt NE 'D'.
+    MESSAGE 'Processing Option Should be A or D.' TYPE 'E'.
+  ENDIF.
+ENDFORM.
+
+FORM main .
+  PERFORM get_student_data.
+  cl_demo_output=>display( gt_student ).
+  PERFORM output.
+
+ENDFORM.
+
+FORM get_student_data .
+  " A 입력시: JOIN으로 데이터 취득, D 입력시: View를 통해 데이터 취득
+  CASE pa_opt.
+    WHEN 'A'.
+      SELECT
+        student~stdid      AS id,
+        student~ename      AS name,
+        student~entry      AS entry,
+        score~subject      AS subject,
+        score~score        AS score,
+        subj~grade         AS grade,
+        text~langu         AS langu,
+        text~text          AS subject_text
+      FROM zstudent_a02 AS student
+      INNER JOIN zscore_a02 AS score
+        ON student~stdid = score~stdid
+      INNER JOIN zsubject_a02 AS subj
+        ON score~subject = subj~subject
+      INNER JOIN zsubject_a02t AS text
+        ON score~subject = text~subject
+      WHERE student~stdid IN @pa_id
+        AND score~subject IN @pa_subj
+        AND text~langu = @sy-langu                  " 로그인 사용자의 언어
+      ORDER BY score~subject, student~stdid ASCENDING
+      INTO TABLE @gt_student.
+      "cl_demo_output=>display( gt_student ).
+    WHEN 'D'.
+      SELECT
+        stdid    AS id,
+        ename    AS name,
+        entry,
+        subject,
+        score,
+        grade,
+        langu,
+        text
+        FROM ZVSTUDENT_A02
+        WHERE stdid IN @pa_id
+          AND subject IN @pa_subj
+        ORDER BY subject, stdid ASCENDING
+        INTO TABLE @gt_student.
+      "cl_demo_output=>display( gt_student ).
+  ENDCASE.
+  IF sy-subrc <> 0.
+    MESSAGE 'System Error!' TYPE 'E'.
+  ENDIF.
+ENDFORM.
+
+FORM output .
+  DATA: tmp_sub    TYPE zscore_a02-subject VALUE IS INITIAL,
+        tmp_nr     TYPE i VALUE 0,
+        tmp_weight TYPE i VALUE 0,
+        tmp_score  TYPE i VALUE 0,
+        ls_total   TYPE i VALUE 0.
+
+  LOOP AT gt_student INTO DATA(ls_student).
+
+    IF tmp_sub <> ls_student-subject.
+      tmp_sub = ls_student-subject.
+      tmp_nr = 0.
+      ULINE.
+      WRITE: ls_student-subject, ls_student-grade, 'Points'.
+    ENDIF.
+
+    ls_total = ls_total + 1.
+    tmp_nr = tmp_nr + 1.
+    tmp_weight = ls_student-grade * ls_student-score.
+    tmp_score = CONV i( ls_student-score ).
+
+    write: / tmp_nr,
+             ls_student-name,
+             ls_student-entry,
+             tmp_score,
+             tmp_weight.
+  ENDLOOP.
+  ULINE.
+  write: / 'Total Students:', ls_total.
+
+ENDFORM.
