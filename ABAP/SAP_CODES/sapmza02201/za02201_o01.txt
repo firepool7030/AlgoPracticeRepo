@@ -1,0 +1,35 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02201_O01
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S100'.
+  SET TITLEBAR 'T100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  MODIFY_SCREEN_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE modify_screen_0100 OUTPUT.
+
+  IF sy-tcode = 'ZA02201_B'.
+    return.
+  ENDIF.
+
+  LOOP AT SCREEN. " SAP Screen Field 안의 데이터들은 SCREEN이라는 테이블 안에 저장된다.
+    CASE screen-name.
+      WHEN 'ZSA021101-CARRID'.
+        IF sy-tcode = 'ZA02201'.
+          "EXIT.
+          CONTINUE.
+        ENDIF.
+      WHEN OTHERS.
+    ENDCASE.
+    MODIFY SCREEN.
+    CLEAR SCREEN.
+  ENDLOOP.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,29 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02301_TOP                                       Module Pool      SAPMZA02301
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02301.
+
+* Common Variable
+DATA: gv_subrc TYPE sy-subrc,
+      ok_code  TYPE sy-ucomm.
+
+* Variable
+DATA: gv_carrid   TYPE scarr-carrid,
+      gv_connid   TYPE spfli-connid,
+      gv_carrname TYPE scarr-carrname.
+
+* Condition
+TABLES: zsa021201_2.
+
+"Airline Info
+TABLES: ZSA021202.
+
+DATA: gt_scarr TYPE TABLE OF zsa021203,
+      gs_scarr LIKE LINE OF gt_scarr.
+
+" Connections
+TABLES zsa021203.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

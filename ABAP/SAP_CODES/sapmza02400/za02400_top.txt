@@ -1,0 +1,14 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02400_TOP                                       Module Pool      SAPMZA02400
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02400.
+
+" Common Data Types
+DATA: ok_code TYPE sy-ucomm.
+
+" global datas
+TABLES: ZSA021401, ZSA021402.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,82 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02320_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S100'.
+  SET TITLEBAR 'T100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  LOAD_DEFAULT_DATA_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE load_default_data_0100 OUTPUT.
+
+  " 기본값 세팅(KA, 0017, 최근 운행일자)
+  zsa021211-carrid = 'KA'.
+  zsa021211-connid = '0017'.
+
+  DATA: lt_flights TYPE TABLE OF sflight,
+        ls_flight TYPE sflight.
+
+  SELECT * FROM sflight
+    INTO TABLE lt_flights
+    WHERE carrid = zsa021211-carrid
+      AND connid = zsa021211-connid.
+
+  IF sy-subrc = 0.
+    SORT lt_flights BY fldate DESCENDING.
+    READ TABLE lt_flights INTO ls_flight INDEX 1.
+    IF sy-subrc = 0.
+      zsa021211-fldate = ls_flight-fldate.
+    ENDIF.
+  ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  MODIFY_SCREEN_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE modify_screen_0100 OUTPUT.
+
+  LOOP AT SCREEN.
+    IF screen-name = 'CARRID'.
+      screen-input = 1.
+      MODIFY SCREEN.
+    ELSEIF screen-name = 'CONNID'.
+      screen-input = 1.
+      MODIFY SCREEN.
+    ELSEIF screen-name = 'GET_CONN_INFO'.
+      IF gv_back_button_active = abap_true.
+        screen-active = 1.
+        screen-input  = 1.
+      ELSE.
+        screen-active = 0.
+      ENDIF.
+      MODIFY SCREEN.
+    ENDIF.
+  ENDLOOP.
+
+ENDMODULE.
+
+
+
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_0200  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE status_0200 OUTPUT.
+  SET PF-STATUS 'S200'.
+  SET TITLEBAR 'T200'.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

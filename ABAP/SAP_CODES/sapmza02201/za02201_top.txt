@@ -1,0 +1,16 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02201_TOP                                       Module Pool      SAPMZA02201
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02201.
+
+" 공통변수
+DATA ok_code TYPE sy-ucomm.
+DATA gv_subrc LIKE sy-subrc.
+DATA gs_cond TYPE zsa021101. " ABAP에서 사용할 변수
+data gv_enter_name TYPE zsa021101-carrname.
+TABLES zsa021101. "Screen에서 사용할 변수 -> 이게 공용으로 사용하기 적합함.
+TABLES zsa021102.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,95 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02301_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  GET_AIRLINE_NAME
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_airline_name USING VALUE(p_carrid) TYPE zsb001201-carrid
+                      CHANGING VALUE(cv_carrname).
+  DATA ls_scarr TYPE zsb001204.
+  CLEAR cv_carrname.
+
+  READ TABLE gt_scarr WITH KEY carrid = p_carrid INTO ls_scarr. " 내부 테이블에서 데이터 조회
+
+  IF sy-subrc = 0. " 만약 조회된 데이터가 존재하면 cv_carrname에 저장
+    cv_carrname = ls_scarr-carrname.
+    RETURN.
+  ENDIF.
+
+  SELECT SINGLE carrid carrname " 반환된 데이터가 내부 테이블에 존재하지 않는다면 db에서 정보 조회
+    FROM scarr
+    INTO CORRESPONDING FIELDS OF ls_scarr " ID, 이름 정보가 들어있는 테이블
+   WHERE carrid = p_carrid.
+
+  IF sy-subrc IS NOT INITIAL. " 조회 실패시 오류 출력
+    MESSAGE s999(zmcb00) WITH 'Dump'.
+    RETURN.
+  ENDIF.
+
+  cv_carrname = ls_scarr-carrname. " 이미 조회한 데이터는 내부 테이블에 저장해서 DB 부하 줄이기
+  APPEND ls_scarr TO gt_scarr.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_FLIGHT_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_flight_info .
+*  clear zsa021202.
+*
+*  SELECT SINGLE *
+*    from sflight as a
+*    INNER JOIN scarr as b
+*    on a~carrid = b~carrid
+*    into CORRESPONDING FIELDS OF zsa021202
+*   WHERE a~carrid = zsa021201_2-carrid
+*     AND connid = zsa021201_2-connid
+*     AND fldate = zsa021201_2-fldate.
+*  IF sy-subrc = 0.
+*
+*  ENDIF.
+
+clear zsa021202.
+
+SELECT single *
+  from sflight
+  into CORRESPONDING FIELDS OF zsa021202
+  where carrid = zsa021201_2-carrid
+    AND connid = zsa021201_2-connid
+    AND fldate = zsa021201_2-fldate.
+  IF sy-subrc <> 0.
+    return.
+  ENDIF.
+
+  "perform get_airline_name.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_CONN_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_conn_info .
+  clear zsa021203.
+  select single *
+    from spfli as a inner join scarr as b
+    on a~carrid = b~carrid
+   into CORRESPONDING FIELDS OF zsa021203
+   where a~carrid = zsa021202-carrid
+    and  a~connid = zsa021202-connid.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

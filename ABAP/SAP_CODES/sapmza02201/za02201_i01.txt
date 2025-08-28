@@ -1,0 +1,47 @@
+MODULE user_command_0100 INPUT.
+
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANCEL'.
+      SET SCREEN 0.
+      LEAVE SCREEN.
+    WHEN 'SEARCH'.
+      SELECT SINGLE
+          a~carrid
+          a~connid
+          a~airpfrom
+          a~airpto
+          b~carrname
+          cf~name AS airpfrom_t
+          ct~name AS airpto_t
+        FROM spfli AS a
+        INNER JOIN scarr AS b ON a~carrid = b~carrid
+        INNER JOIN sairport AS cf ON a~airpfrom = cf~id
+        INNER JOIN sairport AS ct ON a~airpto = ct~id
+        INTO CORRESPONDING FIELDS OF zsa021102
+        WHERE a~carrid = zsa021101-carrid
+          AND a~connid = zsa021101-connid.
+        IF sy-subrc <> 0. " 일치하는 정보가 없을 때 ERROR 메세지 출력
+         clear zsa021101-carrname.
+         MESSAGE i006(zmsg_a_02).
+       ENDIF.
+
+    WHEN 'ENTER'.
+       SELECT SINGLE carrname
+        from scarr
+        into zsa021101-carrname
+       where carrid = zsa021101-carrid.
+       IF sy-subrc <> 0. " 일치하는 정보가 없을 때 ERROR 메세지 출력
+         clear zsa021101-carrname.
+         MESSAGE i006(zmsg_a_02).
+       ENDIF.
+    WHEN OTHERS.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

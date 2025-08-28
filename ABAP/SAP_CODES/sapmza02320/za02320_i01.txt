@@ -1,0 +1,45 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02320_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      set screen 0.
+      LEAVE SCREEN.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANCEL'.
+      LEAVE PROGRAM.
+    WHEN 'ENTER'.
+      " 공항 이름 적용
+      PERFORM get_airline_name USING zsa021211-carrid CHANGING zsa021211-carrname.
+    WHEN 'SEARCH'.
+      PERFORM get_flight_info.
+    WHEN 'GI100'.
+       PERFORM get_conn_info.
+       leave to screen 200.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      leave to screen 100.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

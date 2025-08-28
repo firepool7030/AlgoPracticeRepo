@@ -1,0 +1,19 @@
+*&---------------------------------------------------------------------*
+*& Include MZA02102_TOP                                      Module Pool      SAPMZA02102
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02102.
+
+* DATA: gv_carrid TYPE scarr-carrid.
+
+*DATA: BEGIN OF gs_info,
+*  carrid TYPE scarr-carrid,
+*  carrname TYPE scarr-carrname,
+*  currcode TYPE scarr-currcode,
+*  END OF gs_info.
+
+TABLES ZSA021002.
+TABLES zsa021003.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,20 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02401_TOP                                       Module Pool      SAPMZA02401
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02401.
+
+" 시스템 변수
+DATA: ok_code TYPE sy-ucomm.
+
+" 전역변수
+TABLES: zsa021401, zsa021402, zsa021403.
+
+" 사원이름 저장 변수
+DATA: gv_name TYPE string.
+
+" 버튼 Bool 지정
+DATA: gv_info_btn TYPE abap_bool VALUE abap_false.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

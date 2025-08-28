@@ -1,0 +1,91 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02320_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  GET_AIRLINE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_airline_name using value(p_carrid) TYPE zsa021211-carrid
+                      CHANGING VALUE(cv_carrname).
+  SELECT SINGLE carrname
+    from scarr
+    into cv_carrname
+   WHERE carrid = p_carrid.
+   IF sy-subrc <> 0.
+     MESSAGE i005(zmsg_a_02) with 'NO CORRESPONDING DATA'.
+   ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_FLIGHT_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_flight_info.
+
+clear zsa021212.
+
+  SELECT single *
+    from sflight
+    into CORRESPONDING FIELDS OF zsa021212
+    where carrid = zsa021211-carrid
+      AND connid = zsa021211-connid
+      AND fldate = zsa021211-fldate.
+  IF sy-subrc <> 0.
+    gv_back_button_active = abap_false.
+    MESSAGE i005(zmag_a_02) WITH 'DUMP'.
+    return.
+  ENDIF.
+  gv_back_button_active = abap_true.
+
+  " 항공사 이름 가져오기
+  PERFORM get_airline_name USING zsa021211-carrid CHANGING zsa021212-carrname.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_CONN_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_conn_info.
+
+  clear zsa021213.
+
+  SELECT SINGLE
+        a~carrid
+        a~connid
+        a~airpfrom
+        b1~name as airpfrom_n
+        a~airpto
+        b2~name as airpto_n
+    from spfli as a
+    INNER JOIN sairport as b1
+    on a~airpfrom = b1~id
+    INNER JOIN sairport as b2
+    on a~airpfrom = b2~id
+    into CORRESPONDING FIELDS OF zsa021213
+  WHERE a~carrid = zsa021212-carrid
+    AND a~connid = zsa021212-connid.
+
+  IF sy-subrc <> 0.
+    MESSAGE i005(zmag_a_02) WITH 'DUMP'.
+    return.
+  ENDIF.
+
+  " 항공사 이름 가져오기
+  PERFORM get_airline_name USING zsa021212-carrid CHANGING zsa021213-carrname.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

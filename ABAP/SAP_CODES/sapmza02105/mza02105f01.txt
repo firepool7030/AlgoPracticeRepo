@@ -1,0 +1,74 @@
+" Join
+FORM get_data .
+  SELECT SINGLE a~carrid b~carrname a~connid a~price a~currency a~planetype a~seatsmax a~seatsmax_b a~seatsmax_f
+    FROM sflight AS a
+    INNER JOIN scarr AS b
+      ON a~carrid = b~carrid
+    INTO CORRESPONDING FIELDS OF zsa021005
+   WHERE a~carrid = zsa021004-carrid
+     AND a~connid = zsa021004-connid
+     AND a~fldate = zsa021004-fldate.
+   "cl_demo_output=>display( ZSA021005 ).
+
+ENDFORM.
+" View
+FORM get_data_view .
+  SELECT SINGLE carrid carrname connid price currency planetype seatsmax seatsmax_b seatsmax_f
+    FROM zvsa021005 AS a
+    INTO CORRESPONDING FIELDS OF zsa021005
+   WHERE a~carrid = zsa021004-carrid
+     AND a~connid = zsa021004-connid
+     AND a~fldate = zsa021004-fldate.
+    "cl_demo_output=>display( ZSA021005 ).
+ENDFORM.
+" Read -> 이거 안쓰지 않음? View 쓰는거로..
+FORM get_data_read .
+
+ENDFORM.
+" 좌석수 체크
+FORM check_seats .
+  seats_total = zsa021005-seatsmax + zsa021005-seatsmax_b + zsa021005-seatsmax_f.
+  IF seats_total <> zsa021005-seatsmax.
+    MESSAGE i004(zmsg_a_02).
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_DATA2
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_ZSA021004  text
+*      <--P_ZSA021005  text
+*----------------------------------------------------------------------*
+FORM get_data2 USING    is_cond TYPE zsa021004
+                CHANGING cs_data TYPE zsa021005.
+
+  SELECT SINGLE a~carrid b~carrname a~connid a~price a~currency a~planetype
+                 a~seatsmax a~seatsmax_b a~seatsmax_f
+    FROM sflight AS a
+    INNER JOIN scarr AS b
+    ON a~carrid = b~carrid
+    INTO CORRESPONDING FIELDS OF cs_data
+   WHERE a~carrid = is_cond-carrid
+     AND a~connid = is_cond-connid
+     AND a~fldate = is_cond-fldate.
+   "cl_demo_output=>display( ZSA021005 ).
+
+ENDFORM.
+
+FORM get_data_view2 USING    is_cond TYPE zsa021004
+                    CHANGING cs_data TYPE zsa021005.
+
+  SELECT SINGLE carrid carrname connid price currency planetype
+                 seatsmax seatsmax_b seatsmax_f
+    FROM zvsa021005 AS a
+    INTO CORRESPONDING FIELDS OF cs_data
+   WHERE carrid = is_cond-carrid
+     AND connid = is_cond-connid
+     AND fldate = is_cond-fldate.
+   cl_demo_output=>display( ZSA021005 ).
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

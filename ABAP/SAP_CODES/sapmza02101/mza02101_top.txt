@@ -1,0 +1,21 @@
+*&---------------------------------------------------------------------*
+*& Include MZA02101_TOP                                      Module Pool      SAPMZA02101
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02101.
+
+DATA: gv_carrid TYPE scarr-carrid.
+
+TABLES ZSA021001. " Structure 타입으로 지정해야한다.
+
+DATA: ZSA021001_2 TYPE ZSA021001. " 10번 줄이 9번줄과 의미가 동일하다.
+
+DATA: BEGIN OF gs_cond,
+    carrid TYPE spfli-carrid,
+    connid TYPE spfli-connid,
+  END OF gs_cond.
+
+DATA: gs_cond2 TYPE ZSA021001. " 13번줄도 동일하다
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

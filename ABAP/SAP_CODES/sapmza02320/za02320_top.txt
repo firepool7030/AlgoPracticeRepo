@@ -1,0 +1,27 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02320_TOP                                       Module Pool      SAPMZA02320
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02320.
+
+" Global Data Types
+DATA: ok_code TYPE sy-ucomm,
+      gv_subrc TYPE sy-subrc.
+
+" Variables
+TABLES: ZSA021211.
+DATA: gv_carrid   TYPE scarr-carrid,
+      gv_connid   TYPE spfli-connid,
+      gv_carrname TYPE scarr-carrname.
+
+" Conditions Info
+TABLES: ZSA021212.
+
+" Connection Info
+TABLES: ZSA021213.
+
+" 버튼 로직
+DATA: gv_back_button_active TYPE abap_bool VALUE abap_false.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,117 @@
+*&---------------------------------------------------------------------*
+*&      Form  GET_BOOK_NAME
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_book_name USING p_book TYPE zsa021401-cbook
+                   CHANGING b_name TYPE ztb0010_t-cbtxt.
+  clear b_name.
+  SELECT SINGLE b~cbtxt
+    INTO b_name
+    FROM ztb0010 AS a
+    INNER JOIN ztb0010_t AS b
+      ON a~cbook = b~cbook
+     AND b~spras = sy-langu   "언어가 일치하는 교재명 반환
+   WHERE a~cbook = p_book.
+   IF sy-subrc <> 0.
+     MESSAGE i005(zmsg_a_02) WITH 'ERROR!'.
+   ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&  Include           ZA02400_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  GET_BOOK_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_book_info.
+
+  clear zsa021402.
+  SELECT SINGLE *
+    FROM ztb0010 as a
+    INNER JOIN ztb0001 as b
+    on a~pernr = b~pernr
+    into CORRESPONDING FIELDS OF zsa021402
+   WHERE cbook = zsa021401-cbook.
+   IF sy-subrc <> 0.
+     MESSAGE i005(zmsg_a_02) WITH 'ERROR!'.
+   ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_CATEGORY
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_category USING p_cbcat TYPE ztb0010-cbcat
+                  CHANGING category TYPE zsa021402-category.
+
+  DATA: lt_domain TYPE TABLE OF dd07v,
+        ls_domain_line TYPE dd07v.
+
+  CALL FUNCTION 'GET_DOMAIN_VALUES'
+    EXPORTING
+      domname               = 'ZDCBCAT'
+*     TEXT                  = 'X'
+*     FILL_DD07L_TAB        = ' '
+    TABLES
+      VALUES_TAB            = lt_domain "테이블 반환 (설명 쌍 반환 e.g. M01 : MM)
+*     VALUES_DD07L          =
+    EXCEPTIONS
+      NO_VALUES_FOUND       = 1
+      OTHERS                = 2
+            .
+  IF sy-subrc <> 0.
+    CLEAR category.
+    RETURN.
+  ENDIF.
+
+  READ TABLE lt_domain WITH KEY domvalue_l = p_cbcat INTO ls_domain_line.
+
+  IF sy-subrc = 0.
+    category = ls_domain_line-ddtext.
+  ELSE.
+    CLEAR category.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_MANAGER_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_manager_info USING p_id TYPE zsa021402-pernr.
+
+  clear zsa021403.
+  clear gv_name.
+
+  SELECT SINGLE *
+    FROM ZTB0001
+    INTO CORRESPONDING FIELDS OF zsa021403
+   WHERE pernr = p_id.
+
+  IF sy-subrc <> 0.
+    MESSAGE i005(zmsg_a_02) WITH 'ERROR!'.
+  ENDIF.
+
+  gv_name = zsa021403-lname && zsa021403-fname.
+  gv_info_btn = abap_true.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,43 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02301_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      set screen 0.
+      LEAVE SCREEN.
+    WHEN 'EXIT'.
+      leave PROGRAM.
+    WHEN 'CANCEL'.
+      leave PROGRAM.
+    WHEN 'C200'.
+      set screen 200.
+      LEAVE SCREEN.
+    WHEN 'ENTER'.
+      PERFORM get_airline_name USING zsa021201_2-carrid
+                               CHANGING zsa021201_2-carrname.
+    WHEN 'SEARCH'.
+      PERFORM get_airline_name USING zsa021201_2-carrid
+                               CHANGING zsa021201_2-carrname.
+      PERFORM get_flight_info.
+    WHEN 'SPFLI'.
+      PERFORM get_conn_info.
+      leave to screen 200.
+  ENDCASE.
+ENDMODULE.
+
+MODULE user_command_0200 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      leave to screen 100.
+    WHEN OTHERS.
+  ENDCASE.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

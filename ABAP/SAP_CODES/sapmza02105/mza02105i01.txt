@@ -1,0 +1,33 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZA02105I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      LEAVE PROGRAM.
+    WHEN 'EXIT'.
+      LEAVE TO SCREEN 0.
+    WHEN 'CANCEL'.
+      SET SCREEN 0.
+      LEAVE SCREEN.
+    WHEN 'SUBMIT'.
+      "perform get_data. " 완성
+      "perform get_data_view. " 완성
+      "perform get_data_read. " 어?
+
+      "PERFORM get_data2 USING zsa021004 CHANGING zsa021005.
+      PERFORM get_data_view2 USING zsa021004 CHANGING zsa021005.
+
+      perform check_seats.
+      "PERFORM check_seats_2 USING zsa021004 CHANGING zsa021005.
+
+  ENDCASE.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

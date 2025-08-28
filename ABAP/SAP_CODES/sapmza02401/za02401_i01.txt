@@ -1,0 +1,43 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02401_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      leave to screen 0.
+    WHEN 'EXIT'.
+      leave program.
+    WHEN 'CANCEL'.
+      leave program.
+    WHEN 'ENTER'.  " 입력한 교재코드를 사용해서 정보 가지고 오기
+      PERFORM get_book_name using zsa021401-cbook changing zsa021401-cbtxt.
+    WHEN 'SEARCH'. " 입력한 교재코드를 사용해서 정보 가지고 오기
+      PERFORM get_book_info.
+      PERFORM get_book_name    using zsa021402-cbook changing zsa021402-cbtxt.
+      PERFORM get_category     using zsa021402-cbcat changing zsa021402-category.
+      PERFORM get_manager_info using zsa021402-pernr.
+    WHEN 'C100'.
+      leave to screen 200.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      leave to screen 100.
+  ENDCASE.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750
