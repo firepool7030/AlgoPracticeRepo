@@ -1,0 +1,15 @@
+*&---------------------------------------------------------------------*
+*& Include MZB00840_TOP                                      Module Pool      SAPMZB00840
+*&
+*&---------------------------------------------------------------------*
+PROGRAM sapmzb00840.
+* 공통변수
+DATA: gv_subrc TYPE sy-subrc,
+      ok_code  TYPE sy-ucomm.
+
+* 조건변수
+TABLES: zsa025001. " Use SCREEN.
+DATA: gs_cond TYPE zsa025001. " Use ABAP.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

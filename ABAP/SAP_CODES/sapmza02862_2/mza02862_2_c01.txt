@@ -1,0 +1,32 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZA00862_C01
+*&---------------------------------------------------------------------*
+CLASS lcl_handler IMPLEMENTATION.
+  METHOD on_double_click.
+    "담당자 상세 정보
+    "MESSAGE i016(pn) WITH e_column-fieldname.
+    DATA ls_mat LIKE LINE OF gt_mat.
+    CASE e_column-fieldname.
+      WHEN 'MMADM'.
+        READ TABLE gt_mat INDEX es_row_no-row_id INTO ls_mat.
+        IF sy-subrc = 0. " 이해도에 따라서 쓸지 말지 여부를 결정해야함.
+          PERFORM get_emp_info USING ls_mat-mmadm.
+          IF zsa025003 is not initial.
+            CALL SCREEN 0101 STARTING AT 10 10.
+          ELSE.
+            MESSAGE | NO CORRESPONDING EMPLOYEE. | TYPE 'I'.
+          ENDIF.
+        ENDIF.
+*        IF ls_mat-it_col is not initial.
+*          CALL SCREEN 0101 STARTING AT 10 10.
+*        ENDIF.
+*        READ TABLE ls_mat-it_col index 1 TRANSPORTING no FIELDS.
+*        IF sy-subrc is INITIAL.
+*          call screen 0101 STARTING AT 10 10.
+*        ENDIF.
+    ENDCASE.
+  ENDMETHOD.
+ENDCLASS.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

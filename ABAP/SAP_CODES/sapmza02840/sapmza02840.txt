@@ -1,0 +1,35 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       SAPMZA02840
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE ZA02840_TOP                             .    " global Data
+
+INCLUDE ZA02840_O01                             .  " PBO-Modules
+INCLUDE ZA02840_I01                             .  " PAI-Modules
+INCLUDE ZA02840_F01                             .  " FORM-Routines
+
+*INCLUDE mza02840_get_mat_dataf01.
+
+LOAD-OF-PROGRAM.
+  " 날짜 초기값 정의
+  PERFORM set_defualt_condition USING sy-datum
+                                CHANGING zsa025001-begda zsa025001-endda.
+
+*GUI Texts
+*----------------------------------------------------------
+* T100 --> TITLE 100
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   ERROR Connecting ALV Grid!
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

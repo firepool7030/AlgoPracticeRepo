@@ -1,0 +1,30 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       SAPMZB00840
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE MZA02850_TOP.
+*INCLUDE mzb00840_top                            .    " global Data
+
+INCLUDE MZA02850_O01.
+*INCLUDE mzb00840_o01                            .  " PBO-Modules
+INCLUDE MZA02850_I01.
+*INCLUDE mzb00840_i01                            .  " PAI-Modules
+INCLUDE MZA02850_F01.
+*INCLUDE mzb00840_f01                            .  " FORM-Routines
+
+LOAD-OF-PROGRAM.
+  " 날짜 초기값 정의
+  PERFORM set_defualt_condition USING sy-datum
+                                CHANGING zsa025001-begda zsa025001-endda.
+
+*GUI Texts
+*----------------------------------------------------------
+* T100 --> ALV 1차 정리
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,179 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02840_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  GET_MAT_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      <--P_GS_MAT  text
+*      <--P_GT_MAT  text
+*----------------------------------------------------------------------*
+FORM get_mat_data  CHANGING p_gs_mat
+                            p_gt_mat.
+
+  clear gt_mat.
+
+  IF zsa025001-mstat IS INITIAL.
+    SELECT *
+     FROM ztmm1001 as a
+     INNER JOIN ztmm1001_t as b
+       ON a~matnr = b~matnr
+     INTO CORRESPONDING FIELDS OF TABLE gt_mat
+    WHERE rgdat BETWEEN zsa025001-begda AND zsa025001-endda
+      AND b~langu = sy-langu.
+  ELSE.
+    SELECT *
+     FROM ztmm1001 as a
+     INNER JOIN ztmm1001_t as b
+       ON a~matnr = b~matnr
+     INTO CORRESPONDING FIELDS OF TABLE gt_mat
+    WHERE rgdat BETWEEN zsa025001-begda AND zsa025001-endda
+      AND mstat = zsa025001-mstat
+      AND b~langu = sy-langu.
+  ENDIF.
+
+  "cl_demo_output=>display( gt_mat ).
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFUALT_CONDITION
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_SY_DATUM  text
+*      <--P_ZSA025001_BEGDA  text
+*      <--P_ZSA025001_ENDDA  text
+*----------------------------------------------------------------------*
+FORM set_defualt_condition USING VALUE(p_datum) TYPE sy-datum
+                           CHANGING p_begda TYPE sy-datum
+                                    p_endda TYPE sy-datum.
+
+  CLEAR: p_begda, p_endda.
+  CONCATENATE sy-datum+0(4) '0101' INTO p_begda.
+  p_endda = sy-datum.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Module  CREATE_ALV  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE create_alv OUTPUT.
+  PERFORM create_alv_object.
+  PERFORM display_alv.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Form  CREATE_ALV_OBJECT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM create_alv_object .
+  IF go_con IS NOT INITIAL. RETURN. ENDIF.
+
+  CREATE OBJECT go_con
+    EXPORTING
+*      clsid                          =
+*      parent                         =
+*      style                          =
+*      dynnr                          =
+*      repid                          =
+       container_name                 = 'CON'
+*      lifetime                       = lifetime_default
+*      autoalign                      =
+*      no_autodef_progid_dynnr        =
+*      name                           =
+    EXCEPTIONS
+      cntl_error                     = 1
+      cntl_system_error              = 2
+      create_error                   = 3
+      lifetime_error                 = 4
+      others                         = 5
+      .
+  IF sy-subrc <> 0.
+    MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+                WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+  CREATE OBJECT go_alv
+    EXPORTING
+*      i_shellstyle      = 0
+*      i_lifetime        =
+       i_parent          = go_con
+*      i_appl_events     = space
+*      i_parentdbg       =
+*      i_applogparent    =
+*      i_graphicsparent  =
+*      i_name            =
+*      i_fcat_complete   = SPACE
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      others            = 5
+      .
+  IF sy-subrc <> 0.
+    MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM display_alv .
+
+  " 간격 정렬 시켜주기.
+  PERFORM set_alv_layout USING 'X'
+                         CHANGING gs_layo.
+
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+      i_structure_name              = 'ZSA025002'
+      is_layout                     = gs_layo
+*     it_toolbar_excluding          =
+    CHANGING
+      it_outtab                     = gt_mat
+      it_fieldcatalog               = gt_fcat
+*     it_sort                       =
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+  IF sy-subrc <> 0.
+    MESSAGE | ERROR Connecting ALV Grid! | TYPE 'I'.
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_ALV_LAYOUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_0112   text
+*      <--P_GS_LAYO  text
+*----------------------------------------------------------------------*
+FORM set_alv_layout  USING    VALUE(p_default)
+                     CHANGING ps_layo TYPE lvc_s_layo.
+  IF ps_layo IS NOT INITIAL.
+    RETURN.
+  ENDIF.
+
+  CASE p_default.
+    WHEN 'X'. "Default
+      ps_layo-cwidth_opt = 'X'.
+    WHEN 'A'. "other Set
+*      ...
+  ENDCASE.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

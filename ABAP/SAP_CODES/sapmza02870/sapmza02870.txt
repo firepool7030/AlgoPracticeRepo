@@ -1,0 +1,31 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       SAPMZA02870
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE ZA02870_TOP                             .    " global Data
+
+INCLUDE ZA02870_O01                             .  " PBO-Modules
+INCLUDE ZA02870_I01                             .  " PAI-Modules
+INCLUDE ZA02870_F01                             .  " FORM-Routines
+
+LOAD-OF-PROGRAM.
+  PERFORM set_defult_data.
+  PERFORM set_defult_alv.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   NO MATCHED DATA FOUND!
+*
+* Message class: ZMCB99
+*999   & & & &
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

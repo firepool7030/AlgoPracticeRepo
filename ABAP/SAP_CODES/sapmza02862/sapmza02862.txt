@@ -1,0 +1,43 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       SAPMZB00862
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE MZA02862_TOP.
+*INCLUDE mza00862_top                           .    " global Data
+INCLUDE mza02862_c01.
+INCLUDE MZA02862_O01.
+*INCLUDE mza00862_o01                            .  " PBO-Modules
+INCLUDE MZA02862_I01.
+*INCLUDE mza00862_i01                            .  " PAI-Modules
+INCLUDE MZA02862_F01.
+*INCLUDE mza00862_f01                           .  " FORM-Routines
+*INCLUDE MZA02862_F00.        " 이거는 회사에서 공통된 서브루틴을 사용할 수 있다.
+
+LOAD-OF-PROGRAM.
+  PERFORM set_default_cond USING sy-datum
+                           CHANGING zsb005001-begda zsb005001-endda.
+
+*GUI Texts
+*----------------------------------------------------------
+* T100 --> ALV 1차 정리
+* T101 --> 담당자 사번
+* T200 --> Detail
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: PN
+*016   & & & &
+*
+* Message class: ZMCB99
+*000   & & 일치하는 정보가 존재하지 않습니다.
+*999   & & & &
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

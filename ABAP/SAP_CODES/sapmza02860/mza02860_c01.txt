@@ -1,0 +1,20 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZA02860_C01
+*&---------------------------------------------------------------------*
+* 이벤트 핸들러
+CLASS lcl_event_handler DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS on_double_click FOR EVENT double_click
+                                   OF cl_gui_alv_grid
+                                   IMPORTING e_column es_row_no.
+
+ENDCLASS.
+*DATA: go_handler  TYPE REF TO lcl_event_handler.
+CLASS lcl_event_handler IMPLEMENTATION.
+  METHOD on_double_click.
+    MESSAGE i016(pn). " 더블클릭시 & & & &가 정의된 메세지를 출력
+  ENDMETHOD.
+ENDCLASS.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

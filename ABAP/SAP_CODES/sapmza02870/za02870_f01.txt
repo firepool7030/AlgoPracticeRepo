@@ -1,0 +1,363 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02870_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  GET_BOOKING_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_booking_info .
+
+  " 기본 정보 추출
+  clear gt_book.
+  SELECT *
+    FROM scarr as a
+    INNER JOIN sbook as b
+    ON a~carrid = b~carrid
+    INNER JOIN scustom as c
+    on b~customid = c~id
+    INTO CORRESPONDING FIELDS OF TABLE gt_book
+   WHERE a~carrid = zsa028701-carrid
+     AND b~connid = zsa028701-connid
+     AND b~fldate = zsa028701-fldate.
+
+  IF sy-subrc <> 0.
+    MESSAGE | NO MATCHED DATA FOUND! | TYPE 'I'.
+  ENDIF.
+
+  " 기본정보의 텍스트 정보 찾기
+  PERFORM get_custtype_and_class_text USING 'S_CUSTTYPE' 'X' ''.
+  PERFORM get_custtype_and_class_text USING 'S_CLASS' '' 'X'.
+
+*  " 필드 심볼을 사용하는 방법 -> 추후 코드 추가 계획
+*  PERFORM get_domain_texts_and_set USING 'S_CUSTTYPE' 'custtype' 'custtype_t'.
+*  PERFORM get_domain_texts_and_set USING 'S_CLASS'   'class'   'class_t'.
+
+  " Booking ID에 정보가 있을 때 필터링
+  IF zsa028701-bookid IS NOT INITIAL.
+    DATA: lt_book TYPE TABLE OF zsa028702.
+    LOOP AT gt_book INTO gs_book.
+      IF gs_book-bookid = zsa028701-bookid.
+        APPEND gs_book TO lt_book.
+      ENDIF.
+    ENDLOOP.
+    gt_book = lt_book.
+  ENDIF.
+
+  " Custom ID에 정보가 있을 때 필터링
+  IF zsa028701-customid IS NOT INITIAL.
+    LOOP AT gt_book INTO gs_book.
+      IF gs_book-customid <> zsa028701-customid.
+        DELETE gt_book.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+  "cl_demo_output=>display( gt_book ).
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFULT_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_defult_data .
+  zsa028701-carrid = 'KA'.
+  zsa028701-carrname = 'Korea Airlines'.
+  zsa028701-connid = '17'.
+  zsa028701-fldate = '20250810'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_CARR_NAME
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_carr_name .
+
+  clear zsa028701-carrname.
+
+  select single carrname
+    from scarr
+    into zsa028701-carrname
+   where carrid = zsa028701-carrid.
+
+  IF sy-subrc <> 0.
+    MESSAGE | NO NAME FOUND! | TYPE 'I'.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Module  SET_ALV_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE set_alv_0100 OUTPUT.
+  IF go_con is initial.
+    PERFORM create_alv_0100 USING 'CON' go_con go_alv.
+  ENDIF.
+  PERFORM display_alv_0100.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Form  CREATE_ALV_0100
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_0158   text
+*      -->P_GO_CON  text
+*      -->P_GO_ALV  text
+*----------------------------------------------------------------------*
+FORM create_alv_0100  USING VALUE(p_con_name)
+                            po_con LIKE go_con
+                            po_alv TYPE REF TO cl_gui_alv_grid.
+  CREATE OBJECT po_con
+    EXPORTING
+*      clsid                          =
+*      parent                         =
+*      style                          =
+*      dynnr                          =
+*      repid                          =
+       container_name                 = p_con_name
+*      lifetime                       = lifetime_default
+*      autoalign                      =
+*      no_autodef_progid_dynnr        =
+*      name                           =
+    EXCEPTIONS
+      cntl_error                     = 1
+      cntl_system_error              = 2
+      create_error                   = 3
+      lifetime_error                 = 4
+      lifetime_dynpro_dynpro_link    = 5
+      others                         = 6
+      .
+  IF sy-subrc <> 0.
+    MESSAGE a999(zmcb99) WITH 'Create Customm Conatiner Error'.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+  CREATE OBJECT po_alv
+    EXPORTING
+*      i_shellstyle      = 0
+*      i_lifetime        =
+      i_parent          = po_con
+*      i_appl_events     = space
+*      i_parentdbg       =
+*      i_applogparent    =
+*      i_graphicsparent  =
+*      i_name            =
+*      i_fcat_complete   = SPACE
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      others            = 5
+      .
+  IF sy-subrc <> 0.
+    MESSAGE a999(zmcb99) WITH 'Create ALV Error'.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV_0100
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM display_alv_0100 .
+
+  PERFORM set_alv_layout USING 'X'
+                         CHANGING gs_layo.
+
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+*      i_buffer_active               =
+*      i_bypassing_buffer            =
+*      i_consistency_check           =
+       i_structure_name              = 'ZSA028702'
+*      is_variant                    =
+*      i_save                        =
+*      i_default                     = 'X'
+       is_layout                     = gs_layo
+*      is_print                      =
+*      it_special_groups             =
+*      it_toolbar_excluding          =
+*      it_hyperlink                  =
+*      it_alv_graphics               =
+*      it_except_qinfo               =
+*      ir_salv_adapter               =
+    CHANGING
+       it_outtab                     = gt_book
+       it_fieldcatalog               = gt_fcat
+       it_sort                       = gt_sort
+*      it_filter                     =
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      others                        = 4
+          .
+  IF sy-subrc <> 0.
+*   Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_ALV_LAYOUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_alv_layout USING VALUE(p_default)
+                    CHANGING ps_layo TYPE lvc_s_layo.
+
+  IF ps_layo IS NOT INITIAL.
+    RETURN.
+  ENDIF.
+
+  CASE p_default.
+    WHEN 'X'. "Default
+      ps_layo-cwidth_opt = 'X'.
+      ps_layo-ctab_fname = 'IT_COL'.
+      ps_layo-sel_mode = 'A'. "A, B C D
+    WHEN 'A'. "other Set
+*      ...
+  ENDCASE.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_CUSTTYPE_AND_CLASS_TEXT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_GS_BOOK_CUSTTYPE  text
+*      -->P_GS_BOOK_CLASS  text
+*      <--P_GS_BOOK_CUSTTYPE_T  text
+*      <--P_GS_BOOK_CLASS_T  text
+*----------------------------------------------------------------------*
+FORM get_custtype_and_class_text USING VALUE(p_domname)
+                                       VALUE(p_custtype)
+                                       VALUE(p_class).
+
+  clear gt_domain.
+
+  DATA ls_domain LIKE LINE OF gt_domain.
+  FIELD-SYMBOLS <fs_field> TYPE any.
+
+  "dd07v에서 도메인 텍스트를 인터널 테이블에 추출
+  CALL FUNCTION 'GET_DOMAIN_VALUES'
+    EXPORTING
+      domname         = p_domname
+*     TEXT            = 'X'
+*     FILL_DD07L_TAB  = ' '
+    TABLES
+      values_tab      = gt_domain
+*     VALUES_DD07L    =
+    EXCEPTIONS
+      no_values_found = 1
+      OTHERS          = 2.
+  IF sy-subrc <> 0.
+    MESSAGE | ERROR Getting Domain Values. | TYPE 'I'.
+  ENDIF.
+
+  "dd07v 인터널 테이블에서 정보 취득 후 gt_book에 값 저장
+  LOOP AT gt_book INTO gs_book.
+    IF p_custtype = 'X'.
+      READ TABLE gt_domain WITH KEY domvalue_l = gs_book-custtype
+      INTO ls_domain.
+      IF sy-subrc = 0.
+        gs_book-custtype_t = ls_domain-ddtext.
+      ENDIF.
+    ELSEIF p_class = 'X'.
+      READ TABLE gt_domain WITH KEY domvalue_l = gs_book-class
+      INTO ls_domain.
+      IF sy-subrc = 0.
+        gs_book-class_t = ls_domain-ddtext.
+      ENDIF.
+    ENDIF.
+    MODIFY gt_book FROM gs_book.
+    CLEAR gs_book.
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFULT_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_defult_alv .
+  clear: gt_fcat, gs_fcat.
+
+
+  " 고객번호, 고객구분, 좌석등급, 항공사코드 등 코드 명은 안보이게 처리
+  gs_fcat-fieldname = 'CUSTOMID'.   " 고객번호 필드명
+  gs_fcat-no_out = 'X'.          " 출력 안함
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'CUSTTYPE'.  " 텍스트 필드명
+  gs_fcat-no_out = 'X'.                " 출력함
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'CLASS'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'CONNID'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+
+  " 텍스트 필드 이름 표기
+  gs_fcat-fieldname = 'CUSTTYPE_T'.
+   gs_fcat-coltext = '고객 구분'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'CLASS_T'.
+  gs_fcat-coltext = '좌석 등급'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+" SORT ================================================
+  clear: gt_sort, gs_sort.
+
+  gs_sort-fieldname = 'CUSTTYPE_T'.
+  gs_sort-up = 'X'.
+  gs_sort-spos = '1'.
+  APPEND gs_sort TO gt_sort.
+  clear gs_sort.
+
+  gs_sort-fieldname = 'CLASS_T'.
+  gs_sort-up = 'X'.
+  gs_sort-spos = '2'.
+  APPEND gs_sort TO gt_sort.
+  clear gs_sort.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

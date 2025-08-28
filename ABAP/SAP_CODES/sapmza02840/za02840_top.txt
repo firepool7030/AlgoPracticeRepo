@@ -1,0 +1,29 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02840_TOP                                       Module Pool      SAPMZA02840
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02840.
+
+" 제어 변수
+DATA: ok_code TYPE sy-ucomm.
+
+" CONDITION
+TABLES: zsa025001.
+DATA: BEGIN OF gs_mat,
+      light,
+      maktx TYPE MAKTX.
+      INCLUDE TYPE ztmm1001.
+DATA: END OF gs_mat.
+DATA: gt_mat LIKE TABLE OF gs_mat.
+
+* ALV
+DATA: go_con TYPE REF TO cl_gui_custom_container,
+      go_alv TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_layo TYPE lvc_s_layo.
+
+DATA: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat LIKE LINE OF gt_fcat.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

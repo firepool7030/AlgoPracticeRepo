@@ -1,0 +1,41 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       SAPMZB00840
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE MZA02860_TOP.
+*INCLUDE mzb00852_top                           .    " global Data
+INCLUDE MZA02860_C01. " 클래스의 로직이 많아지기 떄문에 새 Include 프로그램에 저장하는게 맞다.
+INCLUDE MZA02860_O01.
+*INCLUDE mzb00852_o01                            .  " PBO-Modules
+INCLUDE MZA02860_I01.
+*INCLUDE mzb00852_i01                            .  " PAI-Modules
+INCLUDE MZA02860_F01.
+*INCLUDE mzb00852_f01                            .  " FORM-Routines
+
+LOAD-OF-PROGRAM.
+  PERFORM set_default_cond USING sy-datum
+                           CHANGING zsb005001-begda zsb005001-endda.
+
+*GUI Texts
+*----------------------------------------------------------
+* T100 --> ALV 1차 정리
+* T200 --> Title 200
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: PN
+*016   & & & &
+*
+* Message class: ZMCB99
+*000   & & 일치하는 정보가 존재하지 않습니다.
+*999   & & & &
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,13 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZA02862_C01
+*&---------------------------------------------------------------------*
+CLASS lcl_handler IMPLEMENTATION.
+  METHOD on_double_click.
+    " 담당자 상세정보
+    call SCREEN 0101 STARTING AT 10 10.
+    MESSAGE i016(pn) WITH 'TEST'.
+  ENDMETHOD.
+ENDCLASS.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

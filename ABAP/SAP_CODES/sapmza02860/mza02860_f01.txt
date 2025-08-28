@@ -1,0 +1,243 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZB00840_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT_COND
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default_cond USING VALUE(p_datum) TYPE sy-datum
+                      CHANGING p_begda TYPE sy-datum
+                               p_endda TYPE sy-datum.
+  "CHANGING cs_cond TYPE zsb005001 .
+  CLEAR: p_begda, p_endda.
+  CONCATENATE p_datum+0(4) '0101' INTO p_begda.
+  p_endda = p_datum.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  CREATE_ALV_0100
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_GO_CON  text
+*----------------------------------------------------------------------*
+FORM create_alv_0100  USING VALUE(p_con_name)
+                            po_con LIKE go_con
+                            po_alv TYPE REF TO cl_gui_alv_grid.
+  CREATE OBJECT po_con
+    EXPORTING
+*     parent                      =
+      container_name              = p_con_name
+*     style                       =
+*     lifetime                    = lifetime_default
+*     repid                       =
+*     dynnr                       =
+*     no_autodef_progid_dynnr     =
+    EXCEPTIONS
+      cntl_error                  = 1
+      cntl_system_error           = 2
+      create_error                = 3
+      lifetime_error              = 4
+      lifetime_dynpro_dynpro_link = 5
+      OTHERS                      = 6.
+  IF sy-subrc <> 0.
+    MESSAGE a999(zmcb99) WITH 'Create Customm Conatiner Error'.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+  CREATE OBJECT po_alv
+    EXPORTING
+*     i_shellstyle      = 0
+*     i_lifetime        =
+      i_parent          = po_con
+*     i_appl_events     = space
+*     i_parentdbg       =
+*     i_applogparent    =
+*     i_graphicsparent  =
+*     i_name            =
+*     i_fcat_complete   = SPACE
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      OTHERS            = 5.
+  IF sy-subrc <> 0.
+    MESSAGE a999(zmcb99) WITH 'Create ALV Error'.
+* MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*            WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV_0100
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM display_alv_0100 .
+  PERFORM set_alv_layout USING 'X'
+                         CHANGING gs_layo.
+
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+*     i_buffer_active               =
+*     i_bypassing_buffer            =
+*     i_consistency_check           =
+      i_structure_name              = 'ZSB005002'
+*     is_variant                    =
+*     i_save                        =
+*     i_default                     = 'X'
+      is_layout                     = gs_layo
+*     is_print                      =
+*     it_special_groups             =
+*     it_toolbar_excluding          =
+*     it_hyperlink                  =
+*     it_alv_graphics               =
+*     it_except_qinfo               =
+*     ir_salv_adapter               =
+    CHANGING
+      it_outtab                     = gt_mat
+*     it_fieldcatalog               =
+*     it_sort                       =
+*     it_filter                     =
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_MAT_LIST
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_mat_list .
+  CLEAR gt_mat.
+  SELECT matnr mtart meins stprs waers mmadm rgdat mstat
+    FROM ztmm1001
+    INTO CORRESPONDING FIELDS OF TABLE gt_mat
+   WHERE rgdat BETWEEN zsb005001-begda AND zsb005001-endda.
+
+  "자재상태를 선택 했을 경우
+  IF zsb005001-mstat IS NOT INITIAL.
+    DELETE gt_mat WHERE mstat <> zsb005001-mstat.
+  ENDIF.
+
+  IF gt_mat IS INITIAL.
+    "& & 일치하는 정보가 존재하지 않습니다.
+    MESSAGE i000(zmcb99).
+    RETURN.
+  ENDIF.
+
+  LOOP AT gt_mat INTO gs_mat.
+    "자재명 취득
+    PERFORM get_matnr_name USING gs_mat-matnr sy-langu
+                           CHANGING gs_mat-maktx.
+    "자재상태 Text 취득
+    PERFORM get_mstat_text.
+
+    "특정 Field(Cell)에 Color 설정
+    IF gs_mat-waers = 'KRW' AND
+       gs_mat-stprs > '100000'.
+      gs_col-fname = 'STPRS'.
+      gs_col-color-col = '6'.
+      gs_col-color-int = '1'.
+      gs_col-color-inv = '0'.
+      APPEND gs_col TO gs_mat-it_col.
+      CLEAR gs_col.
+    ENDIF.
+    MODIFY gt_mat FROM gs_mat.
+    CLEAR gs_mat.
+  ENDLOOP.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_ALV_LAYOUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_0112   text
+*      <--P_GS_LAYO  text
+*----------------------------------------------------------------------*
+FORM set_alv_layout  USING    VALUE(p_default)
+                     CHANGING ps_layo TYPE lvc_s_layo.
+  IF ps_layo IS NOT INITIAL.
+    RETURN.
+  ENDIF.
+
+  CASE p_default.
+    WHEN 'X'. "Default
+      ps_layo-cwidth_opt = 'X'.
+      ps_layo-ctab_fname = 'IT_COL'.
+    WHEN 'A'. "other Set
+*      ...
+  ENDCASE.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_MATNR_NAME
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_matnr_name USING VALUE(p_matnr) TYPE ztmm1001-matnr
+                          VALUE(p_langu) TYPE sy-langu
+                    CHANGING cv_maktx LIKE gs_mat-maktx.
+  CLEAR cv_maktx.
+  SELECT SINGLE maktx
+    FROM ztmm1001_t
+    INTO cv_maktx "gs_mat-maktx
+   WHERE matnr = p_matnr "gs_mat-matnr
+     AND langu = p_langu. "sy-langu.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_MSTAT_TEXT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_mstat_text .
+  DATA ls_domain LIKE LINE OF gt_domain.
+  IF gt_domain IS INITIAL.
+    CALL FUNCTION 'GET_DOMAIN_VALUES'
+      EXPORTING
+        domname         = 'ZDMSTAT'
+*       TEXT            = 'X'
+*       FILL_DD07L_TAB  = ' '
+      TABLES
+        values_tab      = gt_domain
+*       VALUES_DD07L    =
+      EXCEPTIONS
+        no_values_found = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+* Implement suitable error handling here
+
+    ENDIF.
+  ENDIF.
+
+  READ TABLE gt_domain WITH KEY domvalue_l = gs_mat-mstat
+  INTO ls_domain.
+  IF sy-subrc = 0.
+    gs_mat-mstat_t = ls_domain-ddtext.
+  ENDIF.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

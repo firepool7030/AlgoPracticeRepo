@@ -1,0 +1,42 @@
+*&---------------------------------------------------------------------*
+*& Include MZB00840_TOP                                      Module Pool      SAPMZB00840
+*&
+*&---------------------------------------------------------------------*
+PROGRAM sapmzb00840.
+* 공통변수
+DATA: gv_subrc TYPE sy-subrc,
+      ok_code  TYPE sy-ucomm.
+
+* 조건변수
+TABLES zsb005001. " Use Screen
+*DATA gs_cond TYPE zsb005001. "Use ABAP
+
+* 자재 List
+*DATA gt_mat TYPE zsb005002_t.
+*DATA gs_mat LIKE LINE OF gt_mat. "TYPE zsb005002.
+DATA: BEGIN OF gs_mat.
+    INCLUDE TYPE zsb005002.
+DATA: it_col TYPE lvc_t_scol,
+      END OF gs_mat,
+      gt_mat LIKE TABLE OF gs_mat.
+DATA gs_col LIKE LINE OF gs_mat-it_col.
+
+* Domain Fixed Value
+DATA: gt_domain TYPE TABLE OF dd07v,
+      gs_domain LIKE LINE OF gt_domain.
+
+* ALV
+DATA: go_con  TYPE REF TO cl_gui_custom_container,
+      go_alv  TYPE REF TO cl_gui_alv_grid,
+      gs_layo TYPE lvc_s_layo.
+
+" Handler Class
+CLASS lcl_handler DEFINITION.
+  PUBLIC SECTION.
+    METHODS on_double_click for EVENT double_click of cl_gui_alv_grid " of ~ 안에 정의된 객체에서 던지는 이벤트
+                            IMPORTING e_column es_row_no. " 이벤트 파라미터 3개중 2개만 사용하겠다 선언.
+ENDCLASS.
+DATA go_handler TYPE REF TO lcl_handler. " -> 이거로만 아직 사용 불가능한 객체 변수 -> 객체를 만들어야 함.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750
