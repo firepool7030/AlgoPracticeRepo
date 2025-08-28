@@ -1,0 +1,444 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZA15821_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  CREATE_ALV_OBJECT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM create_alv_object .
+  IF go_con IS NOT INITIAL. RETURN. ENDIF.
+
+  CREATE OBJECT go_con
+    EXPORTING
+*     parent                      =
+      container_name              = 'CON'
+*     style                       =
+*     lifetime                    = lifetime_default
+*     repid                       =
+*     dynnr                       =
+*     no_autodef_progid_dynnr     =
+    EXCEPTIONS
+      cntl_error                  = 1
+      cntl_system_error           = 2
+      create_error                = 3
+      lifetime_error              = 4
+      lifetime_dynpro_dynpro_link = 5
+      OTHERS                      = 6.
+  IF sy-subrc <> 0.
+* MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*            WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    MESSAGE a999(zmbc99) WITH 'Create Container Error'.
+  ENDIF.
+
+  CREATE OBJECT go_alv
+    EXPORTING
+*     i_shellstyle      = 0
+*     i_lifetime        =
+      i_parent          = go_con
+*     i_appl_events     = space
+*     i_parentdbg       =
+*     i_applogparent    =
+*     i_graphicsparent  =
+*     i_name            =
+*     i_fcat_complete   = SPACE
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      OTHERS            = 5.
+  IF sy-subrc <> 0.
+*     MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*                WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    MESSAGE a999(zmbc99) WITH 'Create ALV Error'.
+  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM display_alv .
+
+  " Field CUSTTYPE, CLASS는 화면에 안보이게 설정
+
+
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+      i_structure_name              = 'ZSB003302'
+      is_layout                     = gs_layo
+*     it_toolbar_excluding          =
+    CHANGING
+      it_outtab                     = gt_book
+      it_fieldcatalog               = gt_fcat
+      it_sort                       = gt_sort
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+  IF sy-subrc <> 0.
+    MESSAGE a999(zmbc99) WITH 'ALV Display Error'.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default .
+  "기본조건 설정
+  PERFORM set_default_condition.
+
+  "기본 예약 List
+  PERFORM get_booking_list.
+
+  "ALV 기본 설정
+  PERFORM set_default_alv.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT_CONDITION
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default_condition .
+  CLEAR zsb003301.
+  zsb003301-carrid = 'KA'.
+  zsb003301-connid = '0017'.
+
+  " 2달전 1일로 기본값 설정으로 변경
+  zsb003301-fldate_b = sy-datum - 60.
+  zsb003301-fldate_b+6(2) = '01'.
+
+  " 한달 후 말일로 기본값 설정으로 변경
+  zsb003301-fldate_e = sy-datum + 30.
+  IF zsb003301-fldate_e+4(2) = '01'
+    OR zsb003301-fldate_e+4(2) = '03'
+    OR zsb003301-fldate_e+4(2) = '05'
+    OR zsb003301-fldate_e+4(2) = '07'
+    OR zsb003301-fldate_e+4(2) = '08'
+    OR zsb003301-fldate_e+4(2) = '10'
+    OR zsb003301-fldate_e+4(2) = '12'.
+    zsb003301-fldate_e+6(2) = '31'.
+  ELSEIF zsb003301-fldate_e+4(2) = '02'.
+    zsb003301-fldate_e+6(2) = '28'.
+  ELSE.
+    zsb003301-fldate_e+6(2) = '30'.
+  ENDIF.
+
+  " 항공사명 취득
+  PERFORM get_airline_name USING zsb003301-carrid
+                           CHANGING zsb003301-carrname.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_AIRLINE_NAME
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_ZSB003201_CARRID  text
+*      <--P_ZSB003201_CARRNAME  text
+*----------------------------------------------------------------------*
+FORM get_airline_name  USING    VALUE(p_carrid) TYPE scarr-carrid
+                       CHANGING cv_carrname TYPE scarr-carrname.
+  CLEAR cv_carrname.
+  SELECT SINGLE carrname
+    FROM scarr
+    INTO cv_carrname
+   WHERE carrid = p_carrid.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_BOOKING_LIST
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_booking_list .
+
+
+  CLEAR: gt_book.
+    SELECT carrid connid fldate bookid customid
+           custtype class loccuram loccurkey order_date
+      FROM sbook
+      INTO CORRESPONDING FIELDS OF TABLE gt_book
+     WHERE carrid = zsb003301-carrid
+       AND connid EQ zsb003301-connid
+       AND fldate BETWEEN zsb003301-fldate_b AND zsb003301-fldate_e.
+
+  IF zsb003301-customid IS NOT INITIAL.
+    LOOP AT gt_book ASSIGNING FIELD-SYMBOL(<ls_book>).
+      IF <ls_book>-customid <> zsb003301-customid.
+        DELETE gt_book INDEX sy-tabix.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+*  CLEAR: gt_book.
+*  IF zsb003301-customid IS NOT INITIAL.
+*    SELECT carrid connid fldate bookid customid
+*           custtype class loccuram loccurkey order_date
+*      FROM sbook
+*      INTO CORRESPONDING FIELDS OF TABLE gt_book
+*     WHERE carrid = zsb003301-carrid
+*       AND connid EQ zsb003301-connid
+*       AND fldate BETWEEN zsb003301-fldate_b AND zsb003301-fldate_e
+*       AND customid = zsb003301-customid.
+*  ELSE.
+*    SELECT carrid connid fldate bookid customid
+*           custtype class loccuram loccurkey order_date
+*      FROM sbook
+*      INTO CORRESPONDING FIELDS OF TABLE gt_book
+*     WHERE carrid = zsb003301-carrid
+*       AND connid EQ zsb003301-connid
+*       AND fldate BETWEEN zsb003301-fldate_b AND zsb003301-fldate_e.
+*  ENDIF.
+  IF sy-subrc <> 0.
+    "& & 일치하는 정보가 존재하지 않습니다.
+    MESSAGE s000(zmcb99).
+    RETURN.
+  ENDIF.
+  " 추가 정보 취득
+  PERFORM modify_booking_list.
+  SORT gt_book BY fldate DESCENDING order_date.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  MODIFY_BOOKING_LIST
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM modify_booking_list .
+
+  TYPES: BEGIN OF ty_cust,
+           id   TYPE scustom-id,
+           name TYPE scustom-name,
+         END OF ty_cust.
+
+  DATA: lt_cust TYPE HASHED TABLE OF ty_cust WITH UNIQUE KEY id,
+        ls_cust_line LIKE LINE OF lt_cust.
+
+  SELECT id name
+    FROM scustom
+    INTO CORRESPONDING FIELDS OF TABLE lt_cust.
+
+  DATA: ls_book LIKE LINE OF gt_book.
+  LOOP AT gt_book INTO ls_book.
+    " 고객명 취득
+    READ TABLE lt_cust WITH KEY id = ls_book-customid INTO ls_cust_line.
+    IF sy-subrc = 0.
+      ls_book-name = ls_cust_line-name.
+    ENDIF.
+    " Flight Class Text 취득
+    IF ls_book-custtype = 'B'.
+      ls_book-custtype_t = 'Business Customer'.
+    ELSEIF ls_book-custtype = 'P'.
+      ls_book-custtype_t = 'Private Customer'.
+    ENDIF.
+    " Customer type Text 취득
+    IF ls_book-class = 'C'.
+      ls_book-class_t = 'Business Class'.
+    ELSEIF ls_book-class = 'Y'.
+      ls_book-class_t  = 'Economy Class'.
+    ELSEIF ls_book-class = 'F'.
+      ls_book-class_t  = 'First Class'.
+    ENDIF.
+
+    " 출발전예약일수 계산 ( FLDATE, ORDER_DATE 이용 )
+    " Function Module FIMA_DAYS_AND_MONTHS_AND_YEARS 이용
+*    ls_book-ledays = ls_book-fldate - ls_book-order_date.
+    IF ls_book-order_date > ls_book-fldate.
+      ls_book-light = 1.
+      ls_book-color = 'C610'.
+    ELSE.
+      PERFORM get_ledays USING ls_book-order_date
+                                   ls_book-fldate
+                             CHANGING ls_book-ledays.
+    ENDIF.
+
+    MODIFY gt_book FROM ls_book.
+    CLEAR ls_book.
+  ENDLOOP.
+  "cl_demo_output=>display( gt_book ).
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default_alv .
+  "Layout
+  PERFORM set_alv_layout.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_ALV_LAYOUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_alv_layout .
+  CLEAR gs_layo.
+  CLEAR: gt_fcat, gs_fcat.
+  CLEAR: gt_sort, gs_sort.
+  gs_layo-cwidth_opt = 'X'.
+  gs_layo-zebra = 'X'.
+  gs_layo-excp_fname = 'LIGHT'.
+  gs_layo-excp_led = 'X'.
+  gs_layo-info_fname = 'COLOR'.
+
+  " 조건 2번 실행 -> custtype, class를 no_out value를 사용해서 미출력
+  " using 파라미터 = alv 필드명, 값, no_out 설정 유무, 종료 유무
+  PERFORM set_fcat USING 'FIELDNAME' 'CUSTTYPE' 'X' 'X'
+                  CHANGING gt_fcat gs_fcat.
+  PERFORM set_fcat USING 'FIELDNAME' 'CLASS' 'X' 'X'
+                  CHANGING gt_fcat gs_fcat.
+  " 조건 3번 실행 -> SORT
+  " using 파라미터 = alv 필드명 (실제 값), 위치, gs_sort-up, gs_sort-down
+  " 비행일자 내림차순
+  PERFORM sort_alv USING 'FLDATE' '' '' 'X'
+                   CHANGING gt_sort gs_sort.
+  " 좌석 등급별 정렬
+  PERFORM sort_alv USING 'CLASS_T' '' '' 'X'
+                   CHANGING gt_sort gs_sort.
+  " 최신 예약일자 내림차순 정렬
+  PERFORM sort_alv USING 'ORDER_DATE' '' 'X' ''
+                   CHANGING gt_sort gs_sort.
+  " 고객 등급별 정렬
+  PERFORM sort_alv USING 'CUSTTYPE_T' '' 'X' ''
+                   CHANGING gt_sort gs_sort.
+
+  " 추가) 이름 변경
+  gs_fcat-fieldname = 'CUSTTYPE_T'.
+  gs_fcat-coltext = '고객 등급'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR gs_fcat.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_FCAT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_0317   text
+*      -->P_0318   text
+*      -->P_0319   text
+*      <--P_GT_FCAT  text
+*      <--P_GS_FCAT  text
+*----------------------------------------------------------------------*
+FORM set_fcat  USING    VALUE(p_field)
+                        VALUE(p_value)
+                        VALUE(p_delete)
+                        VALUE(p_end)
+               CHANGING ct_fcat TYPE lvc_t_fcat
+                        cs_fcat TYPE lvc_s_fcat.
+
+  CASE p_field.
+    WHEN 'FIELDNAME'.
+      cs_fcat-fieldname = p_value.
+    WHEN 'COL_POS'.
+      cs_fcat-col_pos = p_value.
+    WHEN 'COLTEXT'.
+      cs_fcat-coltext = p_value.
+  ENDCASE.
+
+  IF p_delete = 'X'.
+    cs_fcat-no_out = 'X'.
+  ENDIF.
+
+  IF p_end = 'X'.
+    APPEND cs_fcat TO ct_fcat.
+    CLEAR cs_fcat.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SORT_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_0341   text
+*      -->P_0342   text
+*      -->P_0343   text
+*      -->P_0344   text
+*      <--P_GT_SORT  text
+*      <--P_GS_SORT  text
+*----------------------------------------------------------------------*
+FORM sort_alv USING   VALUE(p_value)
+                      VALUE(p_position)
+                      VALUE(p_up_sort)
+                      VALUE(p_down_sort)
+              CHANGING ct_sort TYPE lvc_t_sort
+                    cs_sort TYPE lvc_s_sort.
+
+  cs_sort-fieldname = p_value.
+  IF p_position IS NOT INITIAL.
+    cs_sort-spos = p_position.
+  ENDIF.
+  IF p_up_sort IS NOT INITIAL.
+    cs_sort-up = 'X'.
+  ENDIF.
+  IF p_down_sort IS NOT INITIAL.
+    cs_sort-down = 'X'.
+  ENDIF.
+
+  APPEND cs_sort TO ct_sort.
+  CLEAR cs_sort.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_LEDAYS
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_ledays USING VALUE(p_from) " TYPE any C(8)
+                      VALUE(p_to) TYPE vtbbewe-dberbis
+                CHANGING cv_days.
+  DATA lv_days TYPE vtbbewe-atage.
+  DATA lv_date_from TYPE vtbbewe-dberbis.
+  lv_date_from = p_from.
+  CLEAR cv_days.
+  CALL FUNCTION 'FIMA_DAYS_AND_MONTHS_AND_YEARS'
+    EXPORTING
+      i_date_from = lv_date_from
+*     I_KEY_DAY_FROM       =
+      i_date_to   = p_to
+*     I_KEY_DAY_TO         =
+*     I_FLG_SEPARATE       = ' '
+    IMPORTING
+      e_days      = lv_days
+*     E_MONTHS    =
+*     E_YEARS     =
+    .
+  cv_days = lv_days.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

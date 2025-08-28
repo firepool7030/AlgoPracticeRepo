@@ -1,0 +1,38 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       SAPMZA02821
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE ZA02821_TOP                             .    " global Data
+
+INCLUDE ZA02821_O01                             .  " PBO-Modules
+INCLUDE ZA02821_I01                             .  " PAI-Modules
+INCLUDE ZA02821_F01                             .  " FORM-Routines
+
+LOAD-OF-PROGRAM.
+  zsa023201-carrid = 'KA'.
+  PERFORM get_airline_name.
+  zsa023201-connid = '17'.
+  zsa023201-fldate_b = sy-datum - 60.
+  zsa023201-fldate_e = sy-datum + 30.
+
+*GUI Texts
+*----------------------------------------------------------
+* T100 --> Title 100
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   정보를 가져올 수 없습니다.
+*
+* Message class: ZMSG_A_02
+*005   ERROR!
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,62 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02810_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S100'.
+  SET TITLEBAR 'T100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  SET_DEFAULT_DATE_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE set_default_date_0100 OUTPUT.
+  IF zsa022101-fldate_b IS INITIAL AND zsa022101-fldate_e IS INITIAL.
+    DATA: lv_today     TYPE sy-datum,
+          lv_firstday  TYPE sy-datum,
+          lv_endday    TYPE sy-datum.
+
+    lv_today = sy-datum.                                      " 오늘
+    lv_firstday = lv_today.                                   " 오늘에서 월만 바꿔서 1일
+    lv_firstday+6(2) = '01'.                                  " 'YYYYMM01'
+    lv_endday  = lv_today + 14.                               " 2주 후(14일 후)
+
+    zsa022101-fldate_b = lv_firstday.
+    zsa022101-fldate_e = lv_endday.
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  SET_FTYPE_DEFAULT_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE set_ftype_default_0100 OUTPUT.
+  LOOP AT SCREEN.
+    IF screen-name = 'ZSA022101-PLANETYPE'.
+      IF zsa022101-checktype = 'X'.
+        screen-input = 1.
+      ELSE.
+        CLEAR zsa022101-planetype.
+        screen-input = 0.
+      ENDIF.
+      MODIFY SCREEN.
+    ENDIF.
+  ENDLOOP.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  SET_ALV_0010  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE set_alv_0010 OUTPUT.
+  PERFORM create_alv.
+  PERFORM display_alv.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,64 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       SAPMZA02810
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE ZA02810_TOP                             .    " global Data
+
+INCLUDE ZA02810_O01                             .  " PBO-Modules
+INCLUDE ZA02810_I01                             .  " PAI-Modules
+INCLUDE ZA02810_F01                             .  " FORM-Routines
+
+LOAD-OF-PROGRAM.
+
+*data: go_con type ref to cl_gui_custom_container,
+*      go_alv TYPE REF TO cl_gui_alv_grid.
+*
+*data: gs_layo TYPE lvc_s_layo,
+*      gt_sort TYPE lvc_t_sort,
+*      gs_sort LIKE LINE OF gt_sort.
+*
+*data: gt_fcat TYPE lvc_t_fcat,
+*      gs_gcat LIKE LINE OF gt_fcat.
+
+  clear gt_fcat.
+  clear gs_fcat.
+
+  " SEATSMAX 칼럼 제거
+  gs_fcat-fieldname = 'SEATSMAX'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat to gt_fcat.
+  clear gs_fcat.
+
+  " SEATSOCC 칼럼 제거
+  gs_fcat-fieldname = 'SEATSOCC'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat to gt_fcat.
+  clear gs_fcat.
+
+  " seatsavailable 컬럼명 추가
+  gs_fcat-fieldname = 'SEATAVAILABLE'.
+  gs_fcat-coltext  = 'Seats Left'.
+  APPEND gs_fcat TO gt_fcat.
+  clear gs_fcat.
+
+*GUI Texts
+*----------------------------------------------------------
+* T100 --> Title 100
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   총
+*
+* Message class: ZMCB99
+*005   & 항공사에 & 담당자로 변경되었습니다.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

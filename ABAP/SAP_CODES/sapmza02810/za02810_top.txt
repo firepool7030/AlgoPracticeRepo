@@ -1,0 +1,26 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02810_TOP                                       Module Pool      SAPMZA02810
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02810.
+
+DATA: ok_code TYPE sy-ucomm.
+
+TABLES: zsa022101.
+
+DATA: gt_table TYPE TABLE OF zsa023101,
+      gs_data  TYPE zsa023101.
+
+* ALV
+data: go_con type ref to cl_gui_custom_container,
+      go_alv TYPE REF TO cl_gui_alv_grid.
+
+data: gs_layo TYPE lvc_s_layo,
+      gt_sort TYPE lvc_t_sort,
+      gs_sort LIKE LINE OF gt_sort.
+
+data: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat LIKE LINE OF gt_fcat.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

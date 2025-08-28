@@ -1,0 +1,137 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02810_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  SEARCH_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM search_info .
+
+  clear gt_table.
+
+  IF zsa022101-checktype = 'X'.
+    SELECT *
+      FROM scarr AS a
+      INNER JOIN sflight AS b
+      ON a~carrid = b~carrid
+      INNER JOIN spfli as c
+      ON a~carrid = c~carrid
+      WHERE b~fldate BETWEEN @zsa022101-fldate_b AND @zsa022101-fldate_e
+      AND b~planetype = @zsa022101-planetype
+      APPENDING CORRESPONDING FIELDS OF TABLE @gt_table.
+  ELSE.
+    SELECT *
+      FROM scarr AS a
+      INNER JOIN sflight AS b
+      ON a~carrid = b~carrid
+      INNER JOIN spfli as c
+      ON a~carrid = c~carrid
+      WHERE b~fldate BETWEEN @zsa022101-fldate_b AND @zsa022101-fldate_e
+      APPENDING CORRESPONDING FIELDS OF TABLE @gt_table.
+  ENDIF.
+
+  " 조회된 총 레코드 수 출력
+  DATA(lv_count) = lines( gt_table ).
+  MESSAGE |총 { lv_count } 건이 조회되었습니다.| TYPE 'I'.
+
+  "
+  LOOP AT gt_table ASSIGNING FIELD-SYMBOL(<fs_row>).
+    <fs_row>-seatavailable = <fs_row>-seatsmax - <fs_row>-seatsocc.
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  CREATE_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM create_alv .
+
+  IF go_con IS NOT INITIAL. RETURN. ENDIF.
+
+  CREATE OBJECT go_con
+    EXPORTING
+*      parent                         =
+*      style                          =
+*      dynnr                          =
+*      repid                          =
+       container_name                 = 'CON'
+*      lifetime                       = lifetime_default
+*      autoalign                      =
+*      no_autodef_progid_dynnr        =
+*      name                           =
+    EXCEPTIONS
+      cntl_error                     = 1
+      cntl_system_error              = 2
+      create_error                   = 3
+      lifetime_error                 = 4
+      others                         = 5.
+  IF sy-subrc <> 0.
+    MESSAGE a005(zmcb99).
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+  CREATE OBJECT go_alv
+    EXPORTING
+*      i_shellstyle      = 0
+*      i_lifetime        =
+       i_parent          = go_con
+*      i_appl_events     = space
+*      i_parentdbg       =
+*      i_applogparent    =
+*      i_graphicsparent  =
+*      i_name            =
+*      i_fcat_complete   = SPACE
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      others            = 5
+      .
+  IF sy-subrc <> 0.
+   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM display_alv .
+
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZSA023101' " 대문자로 처리하십쇼.
+      is_layout        = gs_layo     " ls_layout
+    CHANGING
+       it_outtab                     = gt_table
+       it_sort                       = gt_sort
+       it_fieldcatalog               = gt_fcat
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      others                        = 4
+          .
+  IF sy-subrc <> 0.
+*   Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,65 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZB00821_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE sy-ucomm.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      "기본으로 복귀
+      PERFORM set_default.
+      LEAVE SCREEN.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'SEARCH'.
+      " 항공사명 취득
+      PERFORM get_airline_name USING zsb003201-carrid
+                               CHANGING zsb003201-carrname.
+      "기본 예약 List
+      PERFORM get_booking_list.
+    WHEN 'ENTER'.
+      " 항공사명 취득
+      PERFORM get_airline_name USING zsb003201-carrid
+                               CHANGING zsb003201-carrname.
+    WHEN OTHERS.
+
+  ENDCASE.
+ENDMODULE.
+
+FORM set_fcat03 USING VALUE(p_field)
+                      VALUE(p_value)
+                      VALUE(p_end)
+                CHANGING ct_fcat TYPE lvc_t_fcat
+                         cs_fcat TYPE lvc_s_fcat.
+
+  CASE p_field.
+    WHEN 'FIELDNAME'.
+      cs_fcat-fieldname = p_value.
+    WHEN 'COL_POS'.
+      cs_fcat-col_pos = p_value.
+    WHEN 'COL_TEXT'.
+      cs_fcat-coltext = p_value.
+
+    IF p_end = 'X'.
+      APPEND cs_fcat to ct_fcat.
+      CLEAR cs_fcat.
+    ENDIF.
+  ENDCASE.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

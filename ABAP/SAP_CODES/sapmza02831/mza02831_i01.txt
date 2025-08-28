@@ -1,0 +1,44 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZB00821_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE sy-ucomm.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      " 기본으로 복귀
+      PERFORM set_default.
+      LEAVE SCREEN.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'SEARCH'.
+      " 항공사명 취득
+      PERFORM get_airline_name USING zsb003301-carrid
+                               CHANGING zsb003301-carrname.
+      "기본 예약 List
+      PERFORM get_booking_list.
+    WHEN 'ENTER'.
+      " 항공사명 취득
+      PERFORM get_airline_name USING zsb003301-carrid
+                               CHANGING zsb003301-carrname.
+    WHEN OTHERS.
+
+  ENDCASE.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

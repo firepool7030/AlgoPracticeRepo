@@ -1,0 +1,24 @@
+*&---------------------------------------------------------------------*
+*& Include MZB00701_TOP                                      Module Pool      SAPMZB00701
+*&
+*&---------------------------------------------------------------------*
+PROGRAM sapmzb00701.
+* Common
+DATA: gv_subrc TYPE sy-subrc,
+      ok_code  TYPE sy-ucomm,
+      gv_dynnr TYPE sy-dynnr.
+
+* Booking List
+DATA: gt_book TYPE TABLE OF sbook,
+      gs_book LIKE LINE OF gt_book.
+
+* Contidion
+TABLES zsb002101.
+DATA gs_cond TYPE zsb002101.
+
+* ALV Object
+DATA go_con TYPE REF TO cl_gui_custom_container.
+DATA go_alv TYPE REF TO cl_gui_alv_grid.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

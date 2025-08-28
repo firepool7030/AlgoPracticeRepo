@@ -1,0 +1,45 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZB00701_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S100'.
+  SET TITLEBAR 'T100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  SET_ALV_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE set_alv_0100 OUTPUT.
+*  IF go_con IS NOT INITIAL. RETURN. ENDIF.
+  IF go_con IS INITIAL.
+  CREATE OBJECT go_con
+    EXPORTING
+      container_name = 'CON'.
+
+  CREATE OBJECT go_alv
+    EXPORTING
+      i_parent = go_con.
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  DISPLAY_ALV_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE display_alv_0100 OUTPUT.
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'SBOOK'
+*     is_layout        =
+    CHANGING
+      it_outtab        = gt_book.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

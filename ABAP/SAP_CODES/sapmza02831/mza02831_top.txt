@@ -1,0 +1,37 @@
+*&---------------------------------------------------------------------*
+*& Include MZB00831_TOP                                      Module Pool      SAPMZB00821
+*&
+*&---------------------------------------------------------------------*
+PROGRAM sapmzb00831.
+* Common
+DATA: ok_code  TYPE sy-ucomm,
+      gv_subrc TYPE sy-subrc.
+
+* Condition
+TABLES zsb003301.
+
+* Booking List
+*DATA: gt_book TYPE zsb003302_t,
+*      gs_book LIKE LINE OF gt_book.
+
+DATA: BEGIN OF gs_book,
+        light,
+        color(4).
+        INCLUDE TYPE ZSB003302.
+DATA: END OF gs_book,
+gt_book LIKE TABLE OF gs_book.
+
+
+* ALV
+DATA: go_con TYPE REF TO cl_gui_custom_container,
+      go_alv TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_layo TYPE lvc_s_layo,
+      gt_sort TYPE lvc_t_sort,
+      gs_sort LIKE LINE OF gt_sort.
+
+DATA: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat LIKE LINE OF gt_fcat.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

@@ -1,0 +1,27 @@
+*&---------------------------------------------------------------------*
+*& Include MZB00810TOP                                       Module Pool      SAPMZB00810
+*&
+*&---------------------------------------------------------------------*
+PROGRAM sapmzb00810.
+* 공통 변수
+DATA: gv_subrc  LIKE sy-subrc,
+      ok_code   LIKE sy-ucomm,
+      gv_okcode LIKE ok_code,
+      gv_dynnr  LIKE sy-dynnr,
+      gv_mesg   TYPE string.
+
+* 조건
+TABLES zsb002101.
+
+* Flight List
+DATA: gs_data TYPE zsb003101,
+      gt_data LIKE TABLE OF gs_data.
+
+* ALV
+DATA: go_con TYPE REF TO cl_gui_custom_container,
+      go_alv TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_layo TYPE lvc_s_layo.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

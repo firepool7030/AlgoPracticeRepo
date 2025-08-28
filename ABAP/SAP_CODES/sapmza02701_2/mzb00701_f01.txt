@@ -1,0 +1,45 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZB00701_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  GET_BOOKING_LIST
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_booking_list .
+  CLEAR: gt_book, gv_subrc.
+  SELECT carrid connid fldate bookid customid
+         custtype smoker luggweight wunit
+         invoice class forcuram forcurkey
+         loccuram loccurkey order_date counter
+         agencynum cancelled
+    FROM sbook
+    INTO CORRESPONDING FIELDS OF TABLE gt_book
+   WHERE carrid = zsb002101-carrid
+     AND fldate BETWEEN zsb002101-fldate_b AND zsb002101-fldate_e.
+  IF sy-subrc <> 0.
+    gv_subrc = 4.
+    RETURN.
+  ENDIF.
+  MESSAGE i999(zmcb99) WITH sy-dbcnt.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT_CONDITON
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default_conditon .
+  CLEAR zsb002101.
+  zsb002101-carrid = 'AA'.
+  CONCATENATE sy-datum+0(4) '0101' INTO zsb002101-fldate_b.
+  zsb002101-fldate_e = sy-datum.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

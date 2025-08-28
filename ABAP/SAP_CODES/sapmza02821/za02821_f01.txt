@@ -1,0 +1,237 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02821_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  GET_AIRLINE_NAME
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_airline_name .
+
+  SELECT SINGLE carrname
+    FROM scarr
+    INTO zsa023201-carrname
+   WHERE carrid = zsa023201-carrid.
+   IF sy-subrc <> 0.
+     MESSAGE i005(zmsg_a_02) WITH 'NO CORRESPONDING DATA'.
+   ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_AIRLINE_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_airline_info .
+
+  CLEAR gt_table.
+
+  DATA: lr_class TYPE RANGE OF sbook-class,
+        ls_class LIKE LINE OF lr_class.
+
+  IF zsa023201-class IS NOT INITIAL.
+    ls_class-sign = 'I'.
+    ls_class-option = 'EQ'.
+    ls_class-low = zsa023201-class.
+
+    APPEND ls_class TO lr_class.
+    CLEAR ls_class.
+
+    SELECT *
+    FROM sbook
+    INTO CORRESPONDING FIELDS OF TABLE gt_table
+   WHERE fldate BETWEEN zsa023201-fldate_b AND zsa023201-fldate_e
+     AND carrid = zsa023201-carrid
+     AND connid = zsa023201-connid
+     AND class IN lr_class.
+
+  ELSE.
+        SELECT *
+    FROM sbook
+    INTO CORRESPONDING FIELDS OF TABLE gt_table
+   WHERE fldate BETWEEN zsa023201-fldate_b AND zsa023201-fldate_e
+     AND carrid = zsa023201-carrid
+     AND connid = zsa023201-connid.
+
+  ENDIF.
+
+  IF sy-subrc <> 0.
+    MESSAGE | 정보를 가져올 수 없습니다. | TYPE 'I'.
+  ENDIF.
+
+*  DATA(lv_count) = lines( gt_table ).
+*  MESSAGE |총 { lv_count } 건이 조회되었습니다.| TYPE 'I'.
+
+  LOOP AT gt_table INTO gs_data.
+
+    " custom type 삭제
+    IF zsa023201-custtype is not initial and gs_data-custtype <> zsa023201-custtype.
+      DELETE gt_table INDEX sy-tabix.
+      CONTINUE.
+    ENDIF.
+    " 예역일이 30일 전부터 한 건만 x로 표시8
+    IF gs_data-fldate - gs_data-order_date > 30.
+      gs_data-bemon = 'X'.
+      MODIFY gt_table FROM gs_data INDEX sy-tabix.
+    ENDIF.
+  ENDLOOP.
+
+  DATA(lv_count) = lines( gt_table ).
+  MESSAGE |총 { lv_count } 건이 조회되었습니다.| TYPE 'I'.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  CREATE_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM create_alv .
+
+  IF go_con IS NOT INITIAL. RETURN. ENDIF.
+
+  CLEAR: gt_fcat, gs_fcat.
+  "비행일자
+  PERFORM set_fcat USING 'FIELDNAME' 'FLDATE' ''
+                     CHANGING gt_fcat gs_fcat.
+  PERFORM set_fcat USING 'COL_POS' '1' ''
+                     CHANGING gt_fcat gs_fcat.
+  PERFORM set_fcat USING 'COLTEXT' '비행일자'(c01) 'X'
+                   CHANGING gt_fcat gs_fcat.
+  "예약일자
+  DATA ls_fcat LIKE LINE OF gt_fcat.
+  PERFORM set_fcat:   USING 'FIELDNAME' 'ORDER_DATE' ''
+                      CHANGING gt_fcat ls_fcat,
+                      USING 'COL_POS' '2' ''
+                      CHANGING gt_fcat ls_fcat,
+                      USING 'COLTEXT' '예약일자'(c02) 'X'
+                      CHANGING gt_fcat ls_fcat.
+
+  " 2달전 예약
+  PERFORM set_fcat:   USING 'FIELDNAME' '한달전 예약' ''
+                      CHANGING gt_fcat ls_fcat,
+                      USING 'COL_POS' '2' ''
+                      CHANGING gt_fcat ls_fcat,
+                      USING 'COLTEXT' '두달전 예약' 'X'
+                      CHANGING gt_fcat ls_fcat.
+
+  CREATE OBJECT go_con
+    EXPORTING
+*      clsid                          =
+*      parent                         =
+*      style                          =
+*      dynnr                          =
+*      repid                          =
+       container_name                 = 'CON'
+*      lifetime                       = lifetime_default
+*      autoalign                      =
+*      no_autodef_progid_dynnr        =
+*      name                           =
+    EXCEPTIONS
+      cntl_error                     = 1
+      cntl_system_error              = 2
+      create_error                   = 3
+      lifetime_error                 = 4
+      OTHERS                         = 5
+      .
+  IF sy-subrc <> 0.
+    MESSAGE | Failed Creating go_con. | TYPE 'I'.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+  CREATE OBJECT go_alv
+    EXPORTING
+*      i_shellstyle      = 0
+*      i_lifetime        =
+       i_parent          = go_con
+*      i_appl_events     = space
+*      i_parentdbg       =
+*      i_applogparent    =
+*      i_graphicsparent  =
+*      i_name            =
+*      i_fcat_complete   = SPACE
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      OTHERS            = 5
+      .
+  IF sy-subrc <> 0.
+   MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+              WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM display_alv .
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZSA023202'
+      is_layout        = gs_layo
+    CHANGING
+       it_outtab                     = gt_table
+       it_sort                       = gt_sort
+       it_fieldcatalog               = gt_fcat
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4
+          .
+  IF sy-subrc <> 0.
+*   Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SORT_TABLE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM sort_table .
+  DATA lr_class TYPE range of sbook-class.
+ENDFORM.
+
+FORM set_fcat USING VALUE(p_field)
+                    VALUE(p_value)
+                    VALUE(p_end)
+              CHANGING ct_fcat TYPE lvc_t_fcat
+                       cs_fcat TYPE lvc_s_fcat.
+
+  CASE p_field.
+    WHEN 'FIELDNAME'.
+      cs_fcat-fieldname = p_value.
+    WHEN 'COL_POS'.
+      cs_fcat-col_pos = p_value.
+    WHEN 'COLTEXT'.
+      cs_fcat-coltext = p_value.
+  ENDCASE.
+
+  IF p_end = 'X'.
+    APPEND cs_fcat TO ct_fcat.
+    CLEAR cs_fcat.
+  ENDIF.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

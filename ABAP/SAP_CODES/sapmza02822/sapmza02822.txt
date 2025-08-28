@@ -1,0 +1,45 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       SAPMZB00821
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+
+INCLUDE MZA02822_TOP.
+*INCLUDE mzb00823_top.
+*INCLUDE mzb00821_top                            .    " global Data
+
+INCLUDE MZA02822_O01.
+*INCLUDE mzb00823_o01.
+*INCLUDE mzb00821_o01                            .  " PBO-Modules
+INCLUDE MZA02822_I01.
+*INCLUDE mzb00823_i01.
+*INCLUDE mzb00821_i01                            .  " PAI-Modules
+INCLUDE MZA02822_F01.
+*INCLUDE mzb00823_f01.
+*INCLUDE mzb00821_f01                            .  " FORM-Routines
+
+LOAD-OF-PROGRAM.
+  " 기본 설정
+  PERFORM set_default.
+
+*GUI Texts
+*----------------------------------------------------------
+* T100 --> ALV 3
+
+*Text elements
+*----------------------------------------------------------
+* C01 비행일자
+* C02 예약일자
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZMCB99
+*000   & & 일치하는 정보가 존재하지 않습니다.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750
