@@ -1,0 +1,24 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02601_TOP                                       Module Pool      SAPMZA02601
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02601.
+
+" Common
+data ok_code TYPE sy-ucomm.
+
+" Screen: Tables
+data: gv_carrid TYPE spfli-carrid,
+      gv_class TYPE sbook-class.
+
+" Check Box -> 3가지 방법이 존재함.
+data: gv_chk1 VALUE 'X',
+      gv_chk2 TYPE c LENGTH 1,
+      gv_chk3(1).
+
+" Radio Button
+data: gv_ra1, gv_ra2, gv_ra3.
+TABLES: zsb002001.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

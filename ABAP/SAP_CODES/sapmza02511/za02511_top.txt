@@ -1,0 +1,17 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02511_TOP                                       Module Pool      SAPMZA02511
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02511.
+
+data: ok_code type sy-ucomm.
+
+data: gv_name type string.
+
+TABLES: zsa022011, zsa022012, zsa022013.
+
+" Tab Strip 화면 변수
+CONTROLS: ts_info TYPE TABSTRIP. " 스크린 엘리먼트와 ABAP 데이터 이름이 연동된다.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

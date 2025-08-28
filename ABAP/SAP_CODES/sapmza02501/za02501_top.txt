@@ -1,0 +1,28 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02501_TOP                                       Module Pool      SAPMZA02501
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02501.
+
+DATA ok_code TYPE sy-ucomm.
+
+" Case 1
+DATA: gv_carrid TYPE sflight-carrid,
+      gv_connid TYPE sflight-connid,
+      gv_carrname TYPE scarr-carrname.
+
+" Case 2
+DATA: BEGIN OF gs_info,
+      gv_carrid TYPE sflight-carrid,
+      gv_connid TYPE sflight-connid,
+      gv_carrname TYPE scarr-carrname,
+  END OF gs_info.
+
+" Case 3
+DATA: gs_cond TYPE zsb001101.
+
+" Case 4
+TABLES: zsb001101.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

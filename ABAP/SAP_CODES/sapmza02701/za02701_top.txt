@@ -1,0 +1,14 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02701_TOP                                       Module Pool      SAPMZA02701
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02701.
+
+DATA: gs_book TYPE sbook,
+      gt_book LIKE TABLE OF gs_book.
+
+*PARAMETERS: pa_carr TYPE gs_book-carrid.
+*SELECT-OPTIONS so_dat FOR gs_book-fldate.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

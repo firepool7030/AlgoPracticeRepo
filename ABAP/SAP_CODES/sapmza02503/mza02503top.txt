@@ -1,0 +1,24 @@
+*&---------------------------------------------------------------------*
+*& Include MZB00501TOP                                       Module Pool      SAPMZB00501
+*&
+*&---------------------------------------------------------------------*
+PROGRAM sapmzb00501.
+" Case 1
+DATA: gv_carrid   TYPE sflight-carrid,
+      gv_carrname TYPE scarr-carrname,
+      gv_connid   TYPE sflight-connid.
+
+" Case 2
+DATA: BEGIN OF gs_info,
+        carrid   TYPE sflight-carrid,
+        carrname TYPE scarr-carrname,
+        connid   TYPE sflight-connid,
+      END OF gs_info.
+" Case 3
+DATA: gs_cond TYPE zsb001101.
+
+" Case 4
+TABLES zsb001101.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

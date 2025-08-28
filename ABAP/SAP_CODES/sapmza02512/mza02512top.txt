@@ -1,0 +1,21 @@
+*&---------------------------------------------------------------------*
+*& Include MZB00511TOP                                       Module Pool      SAPMZB00511
+*&
+*&---------------------------------------------------------------------*
+PROGRAM sapmzb00511.
+
+* Common
+DATA: gv_subrc TYPE sy-subrc,
+      gv_dynnr TYPE sy-dynnr,
+      ok_code  LIKE sy-ucomm.
+* Condition
+TABLES zsb002011.
+
+* Info( 사원, 부서 )
+TABLES: zsb002012, zsb002013.
+
+* Tab Strip
+CONTROLS ts_info TYPE TABSTRIP.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750

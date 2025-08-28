@@ -1,0 +1,61 @@
+*&---------------------------------------------------------------------*
+*&  Include           MZB00501I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  MESSAGE i999(zmcb99) with gv_carrid 'Check'.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'SEARCH'.
+*      IF gv_carrid = 'JL'.
+*        MESSAGE s999(zmcb99) WITH gv_carrid 'Check'.
+*        gv_carrid = 'KA'.
+*      ENDIF.
+    WHEN OTHERS.
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_CARRID  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_carrid INPUT.
+  IF gv_carrid = 'JL'.
+    MESSAGE e999(zmcb99) WITH gv_carrid gv_connid 'Carrid Check' SY-UCOMM.
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE sy-ucomm.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_CONNID  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_connid INPUT.
+  IF gv_connid = '0017'.
+    MESSAGE e999(zmcb99) WITH gv_carrid gv_connid 'Check Connid'.
+  ENDIF.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.4.6 - E.G.Mellodew. 1998-2025. Sap Release 750
