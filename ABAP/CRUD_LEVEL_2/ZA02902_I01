@@ -1,0 +1,107 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02902_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE sy-ucomm.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANCEL'. " 종료 또는 디폴트로 초기화
+      LEAVE PROGRAM.
+    ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'ENTER'.
+      IF zsa029021-comdm is not initial.
+        PERFORM get_manager_name USING zsa029021-comdm CHANGING zsa029021-fullname.
+      ELSE.
+        clear zsa029021-fullname.
+      ENDIF.
+    WHEN 'SEARCH'.
+      PERFORM check_date USING zsa029021-begda zsa029021-endda CHANGING gv_invalid_date_check_flag.
+      IF gv_invalid_date_check_flag = abap_true.
+        MESSAGE i999(zmsg_a_02) WITH '담당 시작일이 종료일보다 늦을 수 없습니다.'.
+      ELSE.
+        PERFORM get_manager_info.
+      ENDIF.
+    WHEN 'INPUT_INFO'.
+      " 기본정보 설정 후 화면 이동
+      PERFORM set_default_values_0200.
+      LEAVE TO SCREEN 200.
+    WHEN 'CHG_INFO'.
+      PERFORM get_chg_row_data.
+    WHEN 'VIEW_INFO'.
+      PERFORM view_info.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 100.
+    WHEN 'ENTER'.
+      PERFORM get_new_manager_info USING zsa029023-comdm zsa029023-begda
+                                         zsa029023-endda zsa029024-carrid zsa029024-connid
+                                   CHANGING zsa029023 zsa029024.
+    WHEN 'NEW_INFO'. "필드에 입력된 값을 입력해주는 버튼.
+      IF zsa029023-fullname IS NOT INITIAL AND zsa029024-carrname IS NOT INITIAL.
+        PERFORM check_date USING zsa029023-begda zsa029023-endda CHANGING gv_invalid_date_check_flag.
+        IF gv_invalid_date_check_flag = abap_true.
+          MESSAGE i999(zmsg_a_02) WITH '담당 시작일이 종료일보다 늦을 수 없습니다.'.
+        ELSE.
+          PERFORM input_info_to_table USING zsa029023 zsa029024.
+        ENDIF.
+      ELSE.
+        MESSAGE i999(zmsg_a_02) WITH 'Press Enter To Input Info Into Table'.
+      ENDIF.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0300  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0300 INPUT.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 100.
+    WHEN 'ENTER'.
+      PERFORM get_manager_name USING zsa029023-comdm CHANGING zsa029023-fullname.
+    WHEN 'CHG_RECORD'.
+        PERFORM check_date USING zsa029023-begda zsa029023-endda CHANGING gv_invalid_date_check_flag.
+        IF gv_invalid_date_check_flag = abap_true.
+          MESSAGE i999(zmsg_a_02) WITH '담당 시작일이 종료일보다 늦을 수 없습니다.'.
+        ELSE.
+          PERFORM change_record_info USING gs_selected_row_data zsa029023.
+        ENDIF.
+    WHEN OTHERS.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0400  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0400 INPUT.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 100.
+    WHEN OTHERS.
+  ENDCASE.
+ENDMODULE.
