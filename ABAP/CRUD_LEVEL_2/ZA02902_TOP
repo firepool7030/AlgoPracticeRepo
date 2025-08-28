@@ -1,0 +1,44 @@
+*&---------------------------------------------------------------------*
+*& Include ZA02902_TOP                                       Module Pool      SAPMZA02902
+*&
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZA02902.
+
+" 테이블 변수
+DATA: gt_data TYPE TABLE OF zta02m02,
+      gs_data LIKE LINE OF gt_data.
+
+" 입력 구조체
+TABLES: zsa029021.
+" 출력 구조체
+TABLES: zsa029022.
+DATA: gt_info TYPE TABLE OF zsa029022,
+      gs_info LIKE LINE OF gt_info.
+
+" 담당자 구조체
+TABLES: zsa029023.
+DATA: gt_manager TYPE TABLE OF zsa029023,
+      gs_manager LIKE LINE OF gt_manager.
+" 항공편 구조체
+TABLES: zsa029024.
+
+" 입력 날짜 무결성 조회용 flag 데이터
+DATA: gv_invalid_date_check_flag TYPE abap_bool VALUE abap_false. "true 값이면 begda > endda 인 경우
+
+" 3번 사용자 변경 화면에서 사용할 row타입 글로벌 변수
+DATA: gs_selected_row_data TYPE zta02m02.
+
+" ALV 변수
+DATA: go_con TYPE REF TO cl_gui_custom_container,
+      go_alv TYPE REF TO cl_gui_alv_grid,
+      gs_layo TYPE lvc_s_layo.
+
+DATA: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat TYPE lvc_s_fcat.
+
+DATA: gt_sort TYPE lvc_t_sort,
+      gs_sort TYPE lvc_s_sort.
+
+" 도메인 고정값 변수
+DATA: gt_domain TYPE TABLE OF dd07v,
+      gs_domain LIKE LINE OF gt_domain.
