@@ -1,0 +1,741 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZA02902_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  GET_MANAGER_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_manager_info .
+  " 조건에 아이디가 없는 경우
+  IF zsa029021-comdm IS INITIAL.
+    SELECT a~comdom AS comdm a~begda a~endda a~carrid a~connid
+           b~lname b~fname b~gesch
+           c~dname
+           d~carrname
+      FROM zta02m02 AS a
+      INNER JOIN ztb0001 AS b ON a~comdom = b~pernr
+      INNER JOIN ztb0002_t AS c ON b~orgeh = c~depid
+      INNER JOIN scarr AS d ON a~carrid = d~carrid
+      INTO CORRESPONDING FIELDS OF TABLE gt_info
+      WHERE a~begda >= zsa029021-begda AND a~endda <= zsa029021-endda
+        AND c~langu = sy-langu.
+  ELSE.
+    " 조건에 아이디가 있는 경우
+    SELECT a~comdom AS comdm a~begda a~endda a~carrid a~connid
+           b~lname b~fname b~gesch
+           c~dname
+           d~carrname
+      FROM zta02m02 AS a
+      INNER JOIN ztb0001 AS b ON a~comdom = b~pernr
+      INNER JOIN ztb0002_t AS c ON b~orgeh = c~depid
+      INNER JOIN scarr AS d ON a~carrid = d~carrid
+      INTO CORRESPONDING FIELDS OF TABLE gt_info
+      WHERE a~begda >= zsa029021-begda AND a~endda <= zsa029021-endda
+        AND a~comdom = zsa029021-comdm
+        AND c~langu = sy-langu.
+  ENDIF.
+
+  IF sy-subrc <> 0.
+    MESSAGE i999(zmsg_a_02) WITH 'No Corresponding Values Found!'.
+    RETURN.
+  ENDIF.
+
+  PERFORM get_domain_info USING 'GESCH'. "gt_domain에 정보 갖고오기
+  DATA ls_domain LIKE LINE OF gt_domain.
+  LOOP AT gt_info ASSIGNING FIELD-SYMBOL(<fs_info>).
+    " 1. 전체 이름으로 합치기
+    CONCATENATE <fs_info>-lname <fs_info>-fname INTO <fs_info>-fullname.
+    " 2. 성별 도메인값 가지고 오기
+    READ TABLE gt_domain WITH KEY domvalue_l = <fs_info>-gesch INTO ls_domain.
+    IF sy-subrc = 0.
+      <fs_info>-gesch_t = ls_domain-ddtext.
+    ENDIF.
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT_VALUES
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default_values .
+  " 시작 날짜 정의
+  zsa029021-begda = sy-datum - 180.
+  zsa029021-endda = sy-datum + 30.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Module  SET_ALV_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE set_alv_0100 OUTPUT.
+  IF go_con IS INITIAL.
+    PERFORM create_alv_0100 USING 'CON' go_con go_alv.
+  ENDIF.
+  "PERFORM get_manager_info.
+  PERFORM display_alv_0100.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Form  CREATE_ALV_0100
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_0030   text
+*      -->P_GO_CON  text
+*      -->P_GO_ALV  text
+*----------------------------------------------------------------------*
+FORM create_alv_0100  USING VALUE(p_con_name)
+                            po_con TYPE REF TO cl_gui_custom_container
+                            po_alv TYPE REF TO cl_gui_alv_grid.
+  CREATE OBJECT po_con
+    EXPORTING
+      "      clsid                          =
+*     parent                      =
+*     style                       =
+*     dynnr                       =
+*     repid                       =
+      container_name              = p_con_name
+*     lifetime                    = lifetime_default
+*     autoalign                   =
+*     no_autodef_progid_dynnr     =
+*     name                        =
+    EXCEPTIONS
+      cntl_error                  = 1
+      cntl_system_error           = 2
+      create_error                = 3
+      lifetime_error              = 4
+      lifetime_dynpro_dynpro_link = 5
+      OTHERS                      = 6.
+  IF sy-subrc <> 0.
+    MESSAGE a999(zmcb99) WITH 'Create Customm Conatiner Error'.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+  CREATE OBJECT po_alv
+    EXPORTING
+*     i_shellstyle      = 0
+*     i_lifetime        =
+      i_parent          = po_con
+*     i_appl_events     = space
+*     i_parentdbg       =
+*     i_applogparent    =
+*     i_graphicsparent  =
+*     i_name            =
+*     i_fcat_complete   = SPACE
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      OTHERS            = 5.
+  IF sy-subrc <> 0.
+    MESSAGE a999(zmcb99) WITH 'Create ALV Error'.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV_0100
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM display_alv_0100 .
+
+  PERFORM set_alv_layo USING 'X' CHANGING gs_layo.
+
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+*     i_buffer_active               =
+*     i_bypassing_buffer            =
+*     i_consistency_check           =
+      i_structure_name              = 'ZSA029022'
+*     is_variant                    =
+*     i_save                        =
+*     i_default                     = 'X'
+      is_layout                     = gs_layo
+*     is_print                      =
+*     it_special_groups             =
+*     it_toolbar_excluding          =
+*     it_hyperlink                  =
+*     it_alv_graphics               =
+*     it_except_qinfo               =
+*     ir_salv_adapter               =
+    CHANGING
+      it_outtab                     = gt_info
+      it_fieldcatalog               = gt_fcat
+      it_sort                       = gt_sort
+"     it_filter                     =
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+  IF sy-subrc <> 0.
+*   Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_ALV_LAYO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_alv_layo USING VALUE(p_default)
+                  CHANGING ps_layo TYPE lvc_s_layo.
+  IF ps_layo IS NOT INITIAL.
+    RETURN.
+  ENDIF.
+
+  CASE p_default.
+    WHEN 'X'.
+      ps_layo-cwidth_opt = 'X'.
+      ps_layo-ctab_fname = 'IT_COL'.
+      ps_layo-sel_mode = 'A'.
+    WHEN OTHERS.
+  ENDCASE.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default_alv .
+  CLEAR: gt_fcat, gs_fcat.
+
+  "고객번호, 고객구분, 좌석등급, 항공사코드 등 코드 명은 안보이게 처리
+  gs_fcat-fieldname = 'FULLNAME'.   " 고객번호 필드명
+  gs_fcat-coltext = '담당자명'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'BEGDA'.
+  gs_fcat-coltext = '담당시작일'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'ENDDA'.
+  gs_fcat-coltext = '담당종료일'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'GESCH_T'.
+  gs_fcat-coltext = '성별'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'DNAME'.
+  gs_fcat-coltext = '부서'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'CARRNAME'.
+  gs_fcat-coltext = '항공사명'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'CONNID'.
+  gs_fcat-coltext = '항공편'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'CARRID'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'LNAME'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'FNAME'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  gs_fcat-fieldname = 'GESCH'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR: gs_fcat.
+
+  " SORT ================================================
+  CLEAR: gt_sort, gs_sort.
+
+  gs_sort-fieldname = 'COMDM'.
+  gs_sort-up = 'X'.
+  "gs_sort-spos = '1'.
+  APPEND gs_sort TO gt_sort.
+  CLEAR gs_sort.
+
+  gs_sort-fieldname = 'FULLNAME'.
+  gs_sort-up = 'X'.
+  APPEND gs_sort TO gt_sort.
+  CLEAR gs_sort.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_ADDITIONAL_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_domain_info USING VALUE(p_name).
+
+  CLEAR gt_domain.
+
+  " 성별 ddtext 가져오기
+  CALL FUNCTION 'GET_DOMAIN_VALUES'
+    EXPORTING
+      domname         = p_name
+*     TEXT            = 'X'
+*     FILL_DD07L_TAB  = ' '
+    TABLES
+      values_tab      = gt_domain
+*     VALUES_DD07L    =
+    EXCEPTIONS
+      no_values_found = 1
+      OTHERS          = 2.
+  IF sy-subrc <> 0.
+    MESSAGE i999(zmsg_a_02) WITH 'Error Getting Domain Values'.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT_VALUES_0200
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default_values_0200 .
+  CLEAR zsa029023.
+  zsa029023-comdm = 23000001.
+  zsa029023-begda = sy-datum.
+  zsa029023-endda = '99991231'.
+  zsa029024-carrid = 'KA'.
+  zsa029024-connid = '17'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_NEW_MANAGER_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_new_manager_info USING p_comdm  TYPE zsa029023-comdm
+                                p_begda  TYPE zsa029023-begda
+                                p_endda  TYPE zsa029023-endda
+                                p_carrid TYPE zsa029024-carrid
+                                p_connid TYPE zsa029024-connid
+                          CHANGING p_mang TYPE zsa029023
+                                   p_carr TYPE zsa029024.
+
+  p_mang-comdm = p_comdm.
+  p_mang-begda = p_begda.
+  p_mang-endda = p_endda.
+  p_carr-carrid = p_carrid.
+  p_carr-connid = p_connid.
+
+  SELECT SINGLE a~pernr AS comdm a~gesch a~entdt a~money a~waers a~orgeh
+                c~dname b~phone a~lname a~fname
+    FROM ztb0001 AS a
+    INNER JOIN ztb0002 AS b ON a~orgeh = b~depid
+    INNER JOIN ztb0002_t AS c ON b~depid = c~depid
+    INTO CORRESPONDING FIELDS OF p_mang
+    WHERE a~pernr = p_mang-comdm AND c~langu = sy-langu.
+
+  IF sy-subrc <> 0.
+    MESSAGE i999(zmsg_a_02) WITH 'No Such Emploee Info'.
+    RETURN.
+  ENDIF.
+
+  PERFORM get_domain_info USING 'GESCH'. "gt_domain에 정보 갖고오기
+  DATA ls_domain LIKE LINE OF gt_domain.
+  " 1. 전체 이름으로 합치기
+  CONCATENATE p_mang-lname p_mang-fname INTO p_mang-fullname.
+  " 2. 성별 도메인값 가지고 오기
+  READ TABLE gt_domain WITH KEY domvalue_l = p_mang-gesch INTO ls_domain.
+  IF sy-subrc = 0.
+    p_mang-gesch_t = ls_domain-ddtext.
+  ENDIF.
+
+  "항공 정보 가져오기
+  PERFORM get_carr_info USING p_carrid p_connid
+                        CHANGING p_carr.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_CARR_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_carr_info USING p_carrid  TYPE zsa029024-carrid
+                         p_connid TYPE zsa029024-connid
+                   CHANGING p_carr TYPE zsa029024.
+
+  SELECT SINGLE a~carrid a~carrname a~currcode b~connid b~airpfrom
+                  b~airpto airp_f~name AS airpfrom_t airp_t~name AS airpto_t
+    FROM scarr AS a
+    INNER JOIN spfli AS b ON a~carrid = b~carrid
+    INNER JOIN sairport AS airp_f ON b~airpfrom = airp_f~id
+    INNER JOIN sairport AS airp_t ON b~airpto = airp_t~id
+    INTO CORRESPONDING FIELDS OF zsa029024
+    WHERE a~carrid = zsa029024-carrid AND b~connid = zsa029024-connid.
+
+  IF sy-subrc <> 0.
+    MESSAGE i999(zmsg_a_02) WITH 'No Such Airport Info'.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  INPUT_INFO_TO_TABLE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM input_info_to_table USING p_a TYPE zsa029023 p_b TYPE zsa029024.
+
+  DATA: ls_data     TYPE zta02m02,
+        lt_existing TYPE TABLE OF zta02m02,
+        ls_existing TYPE zta02m02,
+        lv_rows     TYPE i.
+
+  ls_data-comdom = p_a-comdm.
+  ls_data-connid = p_b-connid.
+  ls_data-carrid = p_b-carrid.
+  ls_data-begda  = p_a-begda.
+  ls_data-endda  = p_a-endda.
+
+  " 1. 동일 담당자 존재하는지 체크
+  SELECT COUNT(*)
+    FROM zta02m02
+    INTO lv_rows
+    WHERE carrid = ls_data-carrid
+      AND connid = ls_data-connid
+      AND comdom = ls_data-comdom.
+  IF lv_rows > 0.
+    MESSAGE i008(zmsg_a_02) WITH ls_data-carrid ls_data-connid ls_data-comdom.
+    RETURN.
+  ENDIF.
+
+  " 2. 신규 등록
+  INSERT zta02m02 FROM ls_data.
+  IF sy-subrc = 0.
+    COMMIT WORK.
+    MESSAGE i007(zmsg_a_02) WITH ls_data-carrid ls_data-connid ls_data-comdom.
+    PERFORM get_manager_info.
+    LEAVE TO SCREEN 100.
+  ELSE.
+    MESSAGE i999(zmsg_a_02) WITH '담당자 등록 오류'.
+    ROLLBACK WORK.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  MERGE_MANAGER_PERIODS
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      <--P_LS_DATA  text
+*      <--P_LV_MERGE  text
+*----------------------------------------------------------------------*
+FORM merge_manager_periods  CHANGING p_data TYPE zta02m02.
+
+  DATA: lt_existing TYPE TABLE OF zta02m02,
+        ls_existing TYPE zta02m02.
+
+  " 기존 담당자 기간 조회
+  SELECT * FROM zta02m02
+    INTO TABLE lt_existing
+    WHERE carrid = p_data-carrid
+      AND connid = p_data-connid
+      AND comdom = p_data-comdom.
+
+  LOOP AT lt_existing INTO ls_existing.
+    " 1. 날짜 겹치는 경우가 있으면 병합
+    IF p_data-begda <= ls_existing-endda AND p_data-endda >= ls_existing-begda.
+      " 2. 시작일, 종료일 확장
+      IF p_data-begda > ls_existing-begda.
+        p_data-begda = ls_existing-begda.
+      ENDIF.
+      IF p_data-endda < ls_existing-endda.
+        p_data-endda = ls_existing-endda.
+      ENDIF.
+
+      " 3. 기존 행 삭제
+      DELETE FROM zta02m02
+        WHERE carrid = ls_existing-carrid
+          AND connid = ls_existing-connid
+          AND comdom = ls_existing-comdom
+          AND begda = ls_existing-begda
+          AND endda = ls_existing-endda.
+      IF sy-subrc <> 0.
+        MESSAGE i999(zmsg_a_02) WITH '병합 중 삭제 오류'.
+        ROLLBACK WORK.
+        RETURN.
+      ENDIF.
+    ENDIF.
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  SET_DEFAULT_VALUES_0300
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_default_values_0300 USING VALUE(ps_data) TYPE zsa029022.
+
+  PERFORM get_new_manager_info USING ps_data-comdm ps_data-begda ps_data-endda
+                                     ps_data-carrid ps_data-connid
+                               CHANGING zsa029023 zsa029024.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_MANAGER_NAME
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_manager_name USING p_comdm TYPE zsa029023-comdm CHANGING p_fullname TYPE zsa029023-fullname.
+  DATA: lv_lname TYPE zsa029023-lname,
+        lv_fname TYPE zsa029023-fname.
+
+  SELECT SINGLE lname fname
+    FROM ztb0001
+    INTO ( lv_lname, lv_fname )
+   WHERE pernr = p_comdm.
+
+  IF sy-subrc <> 0.
+    MESSAGE i999(zmsg_a_02) WITH 'Error Wile Getting Manager Name!'.
+  ENDIF.
+
+  CONCATENATE lv_lname lv_fname INTO p_fullname.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  CHANGE_RECORD_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM change_record_info USING p_old TYPE zta02m02   "변경 전 레코드 INFO
+                              p_new TYPE zsa029023. "변경 후 레코드 INFO
+
+  " 1. ID값이 같다면 기간만 변경
+  IF p_old-comdom = p_new-comdm.
+    UPDATE zta02m02
+       SET begda = p_new-begda
+           endda = p_new-endda
+      WHERE carrid = p_old-carrid
+        AND connid = p_old-connid
+        AND comdom = p_old-comdom
+        AND begda = p_old-begda
+        AND endda = p_old-endda.
+    IF sy-subrc = 0.
+      COMMIT WORK.
+      "MESSAGE i009(zmg_a_02) WITH p_old-carrid p_old-connid p_new-comdm.
+      MESSAGE | { p_old-carrid } 항공사, { p_old-connid } 항공편에 { p_new-comdm } 담당자가 새로 등록되었습니다. | TYPE 'I'.
+      PERFORM get_manager_info.
+      LEAVE TO SCREEN 100.
+    ELSE.
+      MESSAGE i999(zmg_a_02) WITH '동일 담당자 기간 변경 실패'.
+    ENDIF.
+
+    " 2. 사번 다르면 기존 담당자 종료일 현재일로 변경 후, 신규 담당자 INSERT
+  ELSE.
+    UPDATE zta02m02
+       SET endda = sy-datum
+      WHERE carrid = p_old-carrid
+        AND connid = p_old-connid
+        AND comdom = p_old-comdom
+        AND begda = p_old-begda
+        AND endda = p_old-endda.
+    IF sy-subrc <> 0.
+      MESSAGE '기존 담당자 종료일 변경 오류' TYPE 'I'.
+      ROLLBACK WORK.
+      RETURN.
+    ENDIF.
+
+    " 2-2. 신규 담당자 INSERT (기존에 존재하는 기간과 겹치는 기존 레코드 병합)
+    DATA: ls_new TYPE zta02m02.
+    CLEAR ls_new.
+    ls_new-carrid = p_old-carrid.
+    ls_new-connid = p_old-connid.
+    ls_new-comdom = p_new-comdm.
+    ls_new-begda  = p_new-begda.
+    ls_new-endda  = p_new-endda.
+
+    PERFORM merge_manager_periods CHANGING ls_new.
+
+    INSERT zta02m02 FROM ls_new.
+    IF sy-subrc = 0.
+      COMMIT WORK.
+      MESSAGE | { p_old-carrid } 항공사, { p_old-connid } 항공편에 { p_new-comdm } 담당자가 새로 등록되었습니다. | TYPE 'I'.
+      PERFORM get_manager_info.
+      LEAVE TO SCREEN 100.
+    ELSE.
+      MESSAGE '신규 담당자 등록 오류' TYPE 'E'.
+      ROLLBACK WORK.
+      RETURN.
+    ENDIF.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  COPY_INFO_TO_ROW_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_GS_INFO  text
+*      <--P_GS_SELECTED_ROW_DATA  text
+*----------------------------------------------------------------------*
+FORM copy_info_to_row_data  USING    ps_info TYPE zsa029022
+                            CHANGING ps_selected_row_data TYPE zta02m02.
+
+  ps_selected_row_data-comdom = ps_info-comdm.
+  ps_selected_row_data-carrid = ps_info-carrid.
+  ps_selected_row_data-connid = ps_info-connid.
+  ps_selected_row_data-begda  = ps_info-begda.
+  ps_selected_row_data-endda  = ps_info-endda.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_CHG_ROW_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_chg_row_data .
+  " 1. ALV에서 ROW가 선택되었는지 확인하기
+  DATA: lt_selected_rows TYPE lvc_t_row,
+        ls_selected_row  TYPE lvc_s_row.
+  CALL METHOD go_alv->get_selected_rows
+    IMPORTING
+      et_index_rows = lt_selected_rows.
+*      et_row_no     =
+  " 2. 행이 선택 안된 경우 안내문 표시 후 반환
+  IF lt_selected_rows IS INITIAL.
+    MESSAGE '선택된 행이 없습니다.' TYPE 'I'.
+    RETURN.
+  ELSEIF lines( lt_selected_rows ) > 1.
+    MESSAGE '한개의 행만 선택해주세요.' TYPE 'I'.
+    RETURN.
+    " 3. 행이 선택 되었다면 정보 추출
+  ELSE.
+    " 첫 번째 선택된 행 정보 가져오기
+    READ TABLE lt_selected_rows INDEX 1 INTO ls_selected_row.
+    IF sy-subrc = 0.
+      READ TABLE gt_info INDEX ls_selected_row INTO gs_info.
+      IF sy-subrc = 0.
+        PERFORM copy_info_to_row_data USING gs_info CHANGING gs_selected_row_data.
+
+        PERFORM set_default_values_0300 USING gs_info.
+        LEAVE TO SCREEN 300.
+      ELSE.
+        MESSAGE '데이터를 찾을 수 없습니다.' TYPE 'I'.
+        RETURN.
+      ENDIF.
+    ELSE.
+      MESSAGE '올바른 행이 선택되지 않았습니다.' TYPE 'I'.
+      RETURN.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  VIEW_INFO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM view_info .
+  " 1. ALV에서 ROW가 선택되었는지 확인하기
+  DATA: lt_selected_rows TYPE lvc_t_row,
+        ls_selected_row  TYPE lvc_s_row.
+  CALL METHOD go_alv->get_selected_rows
+    IMPORTING
+      et_index_rows = lt_selected_rows.
+*      et_row_no     =
+  " 2. 행이 선택 안된 경우 안내문 표시 후 반환
+  IF lt_selected_rows IS INITIAL.
+    MESSAGE '선택된 행이 없습니다.' TYPE 'I'.
+    RETURN.
+  ELSEIF lines( lt_selected_rows ) > 1.
+    MESSAGE '한개의 행만 선택해주세요.' TYPE 'I'.
+    RETURN.
+    " 3. 행이 선택 되었다면 정보 추출
+  ELSE.
+    " 첫 번째 선택된 행 정보 가져오기
+    READ TABLE lt_selected_rows INDEX 1 INTO ls_selected_row.
+    IF sy-subrc = 0.
+      READ TABLE gt_info INDEX ls_selected_row INTO gs_info.
+      IF sy-subrc = 0.
+        PERFORM set_default_values_0300 USING gs_info.
+        LEAVE TO SCREEN 400.
+      ELSE.
+        MESSAGE '데이터를 찾을 수 없습니다.' TYPE 'I'.
+        RETURN.
+      ENDIF.
+    ELSE.
+      MESSAGE '올바른 행이 선택되지 않았습니다.' TYPE 'I'.
+      RETURN.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  CHECK_DATE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_ZSA029021_BEGDA  text
+*      -->P_ZSA029021_ENDDA  text
+*----------------------------------------------------------------------*
+FORM check_date  USING p_begda TYPE zsa029021-begda
+                       p_endda TYPE zsa029021-endda
+                 CHANGING p_flag TYPE abap_bool.
+
+  IF p_begda > p_endda.
+    p_flag = abap_true.
+  ELSE.
+    p_flag = abap_false.
+  ENDIF.
+
+ENDFORM.
